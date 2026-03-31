@@ -490,7 +490,7 @@ int exe_first_pass(char *file_name) {
     NameRefTable entries;
 
     line_num = 0;
-    IC = 0;
+    IC = 1;
     DC = 0;
     error_found = 0;
 
