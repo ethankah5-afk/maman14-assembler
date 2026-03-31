@@ -10,14 +10,39 @@
 
 #include "main_struct.h"
 #define MAX_LINE_LENGTH 80
-int is_label(char *line_of_file,char *label_name) {
+int is_valid_label(char *label_name, LabelTable *table){
+    int i;
+    if (label_name == NULL) {
+        return 0;
+    }
+    if (label_name[0] == '\0') {
+        return 0;
+    }
+    if (strlen(label_name) > 30) {
+        return 0;
+    }
+    if (!isalpha((unsigned char)label_name[0])) {
+        return 0;
+    }
+    for (i = 1; label_name[i] != '\0'; i++) {
+        if (!isalnum((unsigned char)label_name[i])) {
+            return 0;
+        }
+    }
+    /* if label name is taken */
+    if (table != NULL && findLabel(table, label_name) != -1) {
+        return 0;
+    }
+    return 1;
+}
+int is_label(char *line_of_file,char *label_name,LabelTable *table) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp,line_of_file);
     token= strtok(temp," \t\n");
     if (token!=NULL&&token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1]='\0';
-        if (!is_valid_label(token)) {
+        if (!is_valid_label(token,table)) {
             return 0;
         }
         strcpy(label_name,token);
@@ -68,7 +93,7 @@ int is_entry(char *line) {
     if (strcmp(token, ".entry") != 0) return 0;
 
     token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_valid_label(token)) return 0;
+    if (token == NULL || !is_valid_label(token,NULL)) return 0;
 
     token = strtok(NULL, " \t\n");
     if (token != NULL) return 0;
@@ -91,7 +116,7 @@ int is_extern(char *line, char *label_name) {
     if (strcmp(token, ".extern") != 0) return 0;
 
     token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_valid_label(token)) return 0;
+    if (token == NULL || !is_valid_label(token,NULL)) return 0;
 
     strcpy(label_name, token);
 
@@ -251,7 +276,7 @@ void free_label_table(LabelTable *table) {
     table->count = 0;
     table->capacity = 0;
 }
-int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
+int handle_entry_line(char *line, int line_num, NameRefTable *entries,LabelTable *table) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp, line);
@@ -269,7 +294,7 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
         return 0;
     }
     token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_valid_label(token)) {
+    if (token == NULL || !is_valid_label(token,table)) {
         return 0;
     }
     if (!add_name_ref(entries, token, line_num)) {
@@ -277,7 +302,7 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     }
     return 1;
 }
-int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC) {
+int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
@@ -292,7 +317,7 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     /* אם יש label בתחילת שורה */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
-        if (!is_valid_label(token)) {
+        if (!is_valid_label(token,table)) {
             return 0;
         }
         strcpy(label_name, token);
@@ -328,22 +353,8 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     return 1;
 }
 
-int is_valid_label(char *label_name, LabelTable *table){
-    int i;
-    if (label_name == NULL) return 0;
-    if (label_name[0] == '\0') return 0;
-    if (strlen(label_name) > 30) return 0;
-    if (!isalpha((unsigned char)label_name[0]))return 0;
-    for (i = 1; label_name[i] != '\0'; i++) {
-        if (!isalnum((unsigned char)label_name[i])) return 0;
-    }
-    /* if label name is taken */
-    if (table != NULL && findLabel(table, label_name) != -1) {
-        return 0;
-    }
-    return 1;
-}
-int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC) {
+
+int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
@@ -360,7 +371,7 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     /* אם יש label בתחילת השורה */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
-        if (!is_valid_label(token)) {
+        if (!is_valid_label(token,table)) {
             return 0;
         }
         strcpy(label_name, token);
@@ -463,16 +474,16 @@ int handle_first_pass_line(char *line,
         return 1;
     }
     if (is_entry(line)) {
-        return handle_entry_line(line, line_num, entries);
+        return handle_entry_line(line, line_num, entries,labels);
     }
     if (is_extern(line, extern_label)) {
         return add_name_ref(externs, extern_label, line_num);
     }
     if (is_data(line)) {
-        return handle_data_line(line, line_num, labels, data_img, DC);
+        return handle_data_line(line, line_num, labels, data_img, DC,labels);
     }
     if (is_string(line)) {
-        return handle_string_line(line, line_num, labels, data_img, DC);
+        return handle_string_line(line, line_num, labels, data_img, DC,labels);
     }
     return handle_instruction_line(line, line_num, labels, code_img, IC);
 }
@@ -490,7 +501,6 @@ int exe_first_pass(char *file_name) {
     CodeImage data_img;
     NameRefTable externs;
     NameRefTable entries;
-
     line_num = 0;
     IC = 0;
     DC = 0;
@@ -518,164 +528,3 @@ int exe_first_pass(char *file_name) {
 
     return !error_found;
 }
-
-
-/*int exe_first_pass(char *file_name) {
-    FILE *fp;
-    char line[MAX_LINE_LENGTH];
-    int line_num;
-    int IC;
-    int DC;
-    int error_found;
-    int label_found;
-
-    LabelTable labels;
-    CodeImage code_img;
-    CodeImage data_img;
-    NameRefTable externs;
-    NameRefTable entries;
-
-    line_num = 0;
-    IC = 0;
-    DC = 0;
-    error_found = 0;
-    label_found=0;
-
-    if (!initLabelTable(&labels)) {
-        return 0;
-    }
-
-    if (!init_code_image(&code_img)) {
-        free_label_table(&labels);
-        return 0;
-    }
-
-    if (!init_code_image(&data_img)) {
-        free_label_table(&labels);
-        free_code_image(&code_img);
-        return 0;
-    }
-
-    if (!init_name_ref_table(&externs)) {
-        free_label_table(&labels);
-        free_code_image(&code_img);
-        free_code_image(&data_img);
-        return 0;
-    }
-
-    if (!init_name_ref_table(&entries)) {
-        free_label_table(&labels);
-        free_code_image(&code_img);
-        free_code_image(&data_img);
-        free_name_ref_table(&externs);
-        return 0;
-    }
-
-    fp = fopen(file_name, "r");
-    if (fp == NULL) {
-        free_label_table(&labels);
-        free_code_image(&code_img);
-        free_code_image(&data_img);
-        free_name_ref_table(&externs);
-        free_name_ref_table(&entries);
-        return 0;
-    }
-    while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
-        line_num++;
-        if (is_blank_or_comment(line)) {
-            continue;
-        }
-        char extern_label[31];
-
-        if (is_entry(line)) {
-            if (!handle_entry_line(line,line_num,&entries)){
-                error_found=1;
-            }
-            continue;
-        }
-        if (is_extern(line, extern_label)) {
-            if (!add_name_ref(&externs, extern_label, line_num)) {
-                error_found = 1;
-            }
-            continue;
-        }
-        if (is_data(line)) {
-            if (!handle_data_line(line,line_num,&labels,&data_img,&DC)){
-                error_found = 1;
-            }
-            continue;
-        }
-        if(is_string(line)) {
-            if (!handle_string_line(line,line_num,&labels,&data_img,&DC)) {
-                error_found=1;
-            }
-            continue;
-        }
-        convert_instruction(line);
-    }
-    fclose(fp);
-    free_label_table(&labels);
-    free_code_image(&code_img);
-    free_code_image(&data_img);
-    free_name_ref_table(&externs);
-    free_name_ref_table(&entries);
-
-    /*    LabelTable labels;
-    CodeImage code_img;
-    CodeImage data_img;
-    NameRefTable externs;
-    NameRefTable entries;*/
-//    return 1;
-//}
-
-/*int run_first_pass(char *file_name){
-    FILE *fp_in;
-    int line_b
-    int IC=0;
-    int DC=0;
-    fp_in = fopen(file_name, "r");
-    LabelTable label_table;
-    initLabelTable(&label_table);
-    if (fp_in == NULL) return 0;
-    char line[MAX_LINE];
-    char label_name[MAX_LINE];
-    int found=0;
-    while (fgets(line, MAX_LINE, fp_in)!=NULL) {
-        found=is_label(line,label_name);
-        int data   = is_data(line);
-        int string = is_string(line);
-        if (data||string) {
-            if (found) {
-                addLabel(&label_table,label_name,"data",DC,1);
-            }
-            if (data) {
-                int lines_data=handel_data(line);
-                DC+=lines_data;
-            }
-            else {
-                int lines_string=handel_string(line);
-                DC+=lines_string;
-                DC++;
-            }
-        }
-        else if(is_entry(line)||is_extern(line,label_name)) {
-            if (is_entry(line)) {
-                continue;
-            }
-            else {//is extern
-                addLabel(&label_table,label_name,"external",0,0);
-            }
-        }
-        else{
-            //instruction- or error
-            if (found) {
-                addLabel(&label_table,label_name,"code",IC,0);
-            }
-            convert_instruction(line);
-        }
-    }
-    fclose(fp_in);
-    return 1;
-}
-
-*/
