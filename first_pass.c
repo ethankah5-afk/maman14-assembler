@@ -328,17 +328,19 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     return 1;
 }
 
-int is_valid_lable(char *label) {
+int is_valid_label(char *label_name, LabelTable *table){
     int i;
-    if (strlen(label)>31||label==NULL)return 0;
-    if (!isalpha((unsigned char)label[0]))return 0;
-    if ((unsigned char)label[strlen(label)-1]!=':')return 0;
-    for (i = 1; label[i] != '\0'; i++) {
-        if (!isalnum((unsigned char)label[i])) {
-            return 0;
-        }
+    if (label_name == NULL) return 0;
+    if (label_name[0] == '\0') return 0;
+    if (strlen(label_name) > 30) return 0;
+    if (!isalpha((unsigned char)label_name[0]))return 0;
+    for (i = 1; label_name[i] != '\0'; i++) {
+        if (!isalnum((unsigned char)label_name[i])) return 0;
     }
-    //if label name is taken
+    /* if label name is taken */
+    if (table != NULL && findLabel(table, label_name) != -1) {
+        return 0;
+    }
     return 1;
 }
 int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC) {
