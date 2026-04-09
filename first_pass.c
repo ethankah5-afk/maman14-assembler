@@ -7,7 +7,7 @@
 #include "first_pass.h"
 
 #include <stdlib.h>
-
+#include "main_struct.c"
 #include "main_struct.h"
 #define MAX_LINE_LENGTH 80
 int is_valid_label(char *label_name, LabelTable *table){
@@ -173,7 +173,6 @@ int addLabel(LabelTable *table, char *name, int address, int is_data, int line_d
 
 int add_code_word(CodeImage *img, unsigned short value, const char *label, int line) {
     CodeWord *temp;
-
     if (img->count == img->capacity) {
         img->capacity *= 2;
         temp = (CodeWord *)realloc(img->arr, img->capacity * sizeof(CodeWord));
@@ -460,6 +459,55 @@ void free_first_pass_memory(LabelTable *labels,
     free_name_ref_table(externs);
     free_name_ref_table(entries);
 }
+int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage code_img,int *IC){
+    char temp[MAX_LINE_LENGTH];
+    char *token;
+    char label_name[31];
+    Instruction *inst;
+    char *operands_line;
+    int words;
+    int has_label=0;
+    int i;
+    strcpy(temp,line);
+    token=strtok(temp,"\t\n");
+    if (token == NULL) {
+        return 0;
+    }
+    /* אם יש label בתחילת שורה */
+    if (token[strlen(token) - 1] == ':') {
+        token[strlen(token) - 1] = '\0';
+        if (!is_valid_label(token,labels)) {
+            return 0;
+        }
+        strcpy(label_name, token);
+        has_label = 1;
+        token = strtok(NULL, " \t\n");
+        if (token == NULL) {
+            return 0;
+        }
+    }
+    inst = findInstruction(token);
+    if (inst == NULL){
+        return 0;
+    }
+    operands_line = strtok(NULL, "\n");
+    words = instruction_word_count(inst, operands_line);
+    if (words < 0) {
+        return 0;
+    }
+    if (has_label) {
+        if (!addLabel(labels,label_name,*IC,0,line_num)) {
+            return 0;
+        }
+    }
+    for (i = 0; i < words; i++) {
+        if (!add_code_word(code_img, 0, NULL, line_num)) {
+            return 0;
+        }
+    }
+    *IC += words;
+    return 1;
+}
 int handle_first_pass_line(char *line,
                            int line_num,
                            LabelTable *labels,
@@ -470,9 +518,9 @@ int handle_first_pass_line(char *line,
                            int *IC,
                            int *DC) {
     char extern_label[31];
-    if (is_blank_or_comment(line)) {
-        return 1;
-    }
+//  if (is_blank_or_comment(line)) {
+//      return 1;
+//  }
     if (is_entry(line)) {
         return handle_entry_line(line, line_num, entries,labels);
     }
