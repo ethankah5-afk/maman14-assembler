@@ -10,6 +10,19 @@
 #include "main_struct.c"
 #include "main_struct.h"
 #define MAX_LINE_LENGTH 80
+int is_blank_or_comment(char *line) {
+    int i=0;
+    if (line[0]==';') {
+        return 1;
+    }
+    while (line[i]==' '||line[i]=='\t') {
+        i++;
+    }
+    if (line[i]=='\n'||line[i]=='\0') {
+        return 1;
+    }
+    return 0;
+}
 int is_valid_label(char *label_name, LabelTable *table){
     int i;
     if (label_name == NULL) {
@@ -32,6 +45,27 @@ int is_valid_label(char *label_name, LabelTable *table){
     /* if label name is taken */
     if (table != NULL && findLabel(table, label_name) != -1) {
         return 0;
+    }
+    return 1;
+}
+int is_label_operands(char *label_name){
+    int i;
+    if (label_name == NULL) {
+        return 0;
+    }
+    if (label_name[0] == '\0') {
+        return 0;
+    }
+    if (strlen(label_name) > 30) {
+        return 0;
+    }
+    if (!isalpha((unsigned char)label_name[0])) {
+        return 0;
+    }
+    for (i = 1; label_name[i] != '\0'; i++) {
+        if (!isalnum((unsigned char)label_name[i])) {
+            return 0;
+        }
     }
     return 1;
 }
@@ -459,7 +493,30 @@ void free_first_pass_memory(LabelTable *labels,
     free_name_ref_table(externs);
     free_name_ref_table(entries);
 }
-int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage code_img,int *IC){
+void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
+    char temp [MAX_LINE_LENGTH];
+    char *token;
+    *count=0;
+    op1[0]='\0';
+    op2[0]='\0';
+    if (operands_line==NULL) {
+        return;
+    }
+    strcpy(temp,operands_line);
+    token=strtok(temp,",");
+    if (token==NULL) {
+        return;
+    }
+    strcpy(op1,token);
+    (*count)++;
+    token=strtok(NULL,",");
+    if (token==NULL) {
+        return;
+    }
+    strcpy(op2,token);
+    (*count)++;
+}
+int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC){
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
@@ -468,6 +525,9 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     int words;
     int has_label=0;
     int i;
+    char op1[MAX_LINE_LENGTH];
+    char op2[MAX_LINE_LENGTH];
+    int op_count;
     strcpy(temp,line);
     token=strtok(temp,"\t\n");
     if (token == NULL) {
@@ -490,23 +550,48 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     if (inst == NULL){
         return 0;
     }
+
     operands_line = strtok(NULL, "\n");
-    words = instruction_word_count(inst, operands_line);
-    if (words < 0) {
+    parse_operands(operands_line,op1,op2,&op_count);
+
+    words=1+op_count;
+    if (!add_code_word(code_img,0,NULL,line_num)){
         return 0;
     }
-    if (has_label) {
-        if (!addLabel(labels,label_name,*IC,0,line_num)) {
-            return 0;
+    if (op_count>=1) {
+        if (is_label_operands(op1)) {
+            if (!add_code_word(code_img,0,op1,line_num)) {
+                return 0;
+            }
+        }
+        else {
+            if (!add_code_word(code_img,0,NULL,line_num)) {
+                return 0;
+            }
         }
     }
-    for (i = 0; i < words; i++) {
-        if (!add_code_word(code_img, 0, NULL, line_num)) {
-            return 0;
+    if(op_count==2) {
+        if (is_label_operands(op1)) {
+            if (!add_code_word(code_img,0,op2,line_num)) {
+                return 0;
+            }
+        }
+        else {
+            if (!add_code_word(code_img,0,NULL,line_num)) {
+                return 0;
+            }
         }
     }
     *IC += words;
     return 1;
+}
+void update_data_labels(LabelTable *labels, int IC) {
+    int i;
+    for (i=0; i<labels->count;i++) {
+        if (labels->arr[i].is_data) {
+            labels->arr[i].address+=IC;
+        }
+    }
 }
 int handle_first_pass_line(char *line,
                            int line_num,
@@ -518,9 +603,9 @@ int handle_first_pass_line(char *line,
                            int *IC,
                            int *DC) {
     char extern_label[31];
-//  if (is_blank_or_comment(line)) {
-//      return 1;
-//  }
+    if (is_blank_or_comment(line)) {
+        return 1;
+    }
     if (is_entry(line)) {
         return handle_entry_line(line, line_num, entries,labels);
     }
@@ -572,6 +657,7 @@ int exe_first_pass(char *file_name) {
                                     }
     }
     fclose(fp);
+    update_data_labels(&labels,IC);
     free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
 
     return !error_found;
