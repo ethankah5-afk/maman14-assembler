@@ -5,4 +5,40 @@
 #ifndef ASSEMBLERPROJECT_FIRST_PASS_H
 #define ASSEMBLERPROJECT_FIRST_PASS_H
 
+#include "first_pass.h"
+#include "main_struct.h"
+
+
+#define MAX_LINE_LENGTH 80
+
+
+int is_blank_or_comment(char *line);
+int is_valid_label(char *label_name, LabelTable *table);
+int is_label_operands(char *label_name);
+int is_label(char *line_of_file,char *label_name,LabelTable *table);
+int is_data(char *line);
+int is_entry(char *line);
+int is_extern(char *line, char *label_name);
+int initLabelTable(LabelTable *table);
+int findLabel(LabelTable *table, char *name);
+int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined);
+int add_code_word(CodeImage *img, unsigned short value, const char *label, int line);
+void free_code_image(CodeImage *img);
+int init_code_image(CodeImage *img);
+int  init_name_ref_table(NameRefTable *table);
+void free_name_ref_table(NameRefTable *table);
+int add_name_ref(NameRefTable *table, const char *name, int line);
+void free_label_table(LabelTable *table);
+int handle_entry_line(char *line, int line_num, NameRefTable *entries,LabelTable *table);
+int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
+int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
+int init_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
+void free_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
+void parse_operands(char *operands_line, char *op1, char *op2, int *count);
+int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC);
+void update_data_labels(LabelTable *labels, int IC);
+int handle_first_pass_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int *IC,int *DC);
+int exe_first_pass(char *file_name);
+
+
 #endif //ASSEMBLERPROJECT_FIRST_PASS_H
