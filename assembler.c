@@ -7,6 +7,7 @@
 #include "first_pass.h"
 #include <stdlib.h>
 #include "main_struct.h"
+#include "pre_proc.h"
 int main(int argc, char *argv[]) {
     int i;
 
