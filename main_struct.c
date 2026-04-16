@@ -35,14 +35,18 @@ char *DIRECTIVES[] = {".data", ".string", ".extern", ".entry"};
 Instruction* findInstruction(const char *name)
 {
    int i;
-
    for (i = 0; i <INSTRUCTIONS_COUNT; i++) {
        if (strcmp(instructionTable[i].name, name) == 0) {
            return &instructionTable[i];
        }
    }
-
    return NULL;
+}
+int instruction_word_count(Instruction *inst, char *operands_line) {
+    int i;
+    for (i = 0; i <INSTRUCTIONS_COUNT; i++) {
+
+    }
 }
 int findReg(char *str) {
     int i;
