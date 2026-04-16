@@ -68,6 +68,6 @@ typedef struct NameRefTable {
     int capacity;
 } NameRefTable;
 
-Instruction* findInstruction(char *name);
+Instruction* findInstruction(const char *name);
 
 #endif //ASSEMBLERPROJECT_MAIN_STRUCT_H
