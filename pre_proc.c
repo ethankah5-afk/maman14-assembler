@@ -3,35 +3,66 @@
 //
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
+#include <stdlib.h>
+#include "main_struct.h"
 #include "pre_proc.h"
+#define MAX_LINE_LENGTH 81
 
+
+static void free_macro_table(macro_node *table, int table_size) {
+    int i;
+    for (i = 0; i < table_size; i++) {
+        free(table[i].name);
+        free(table[i].content);
+    }
+    free(table);
+}
+
+char *add_new_file(char *file_name, char *ending) {
+    char *dot;
+    char *new_file_name;
+
+    new_file_name = (char *)malloc(strlen(file_name) + strlen(ending) + 1);
+    if (new_file_name == NULL) {
+        return NULL;
+    }
+
+    strcpy(new_file_name, file_name);
+
+    dot = strchr(new_file_name, '.');
+    if (dot != NULL) {
+        *dot = '\0';
+    }
+
+    strcat(new_file_name, ending);
+    return new_file_name;
+}
 
 int is_macro(char *line_num,char **mcro_name) {
     char *token;
     char *extra;
-    token= strtok(line_num," /t/n");
+    token= strtok(line_num," \t\n");
     if (token == NULL) return 0;
     if (strcmp(token,"mcro")!=0) {
         return 0;
     }
-    token= strtok(NULL," /t/n");
+    token= strtok(NULL," \t\n");
     if (token == NULL) return -1;
     *mcro_name=token;
-    extra = strtok(NULL," /t/n");
-    if (extra == NULL) return -1;
+    extra = strtok(NULL," \t\n");
+    if (extra != NULL) return -1;
     return 1;
 }
 
 char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
     int mcro_length=0;
     char *mcro;
-    char str[81];
+    char str[MAX_LINE_LENGTH];
     if (fsetpos(fp,pos)!=0) {
         return NULL;
     }
     str[0]='\0';
-    while (fgets(str,81,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
+    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
         mcro_length+=(int)strlen(str);
         (*line_count)++;
     }
@@ -41,15 +72,15 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
         free(mcro);
         return NULL;
     }
-    mcro[0]= '/0';
-    while (fgets(str,81,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
+    mcro[0]= '\0';
+    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
         strcat(mcro,str);
     }
     return mcro;
 }
 
 int is_macro_call(char *line, char *macro_name) {
-    char copy[81];
+    char copy[MAX_LINE_LENGTH];
     char *token;
     char *extra;
     strcpy(copy, line);
@@ -69,15 +100,15 @@ int is_macro_call(char *line, char *macro_name) {
 
 int run_preproc(char *file_name) {
     FILE *fp_in, *fp_out;
-    char line[80];
-    char line_copy[80];
+    char line[MAX_LINE_LENGTH];
+    char line_copy[MAX_LINE_LENGTH];
     char *mcro_name, *am_file, *content;
     fpos_t pos;
     macro_node *table = NULL;
     macro_node *temp;
     int table_size = 0;
     int line_count = 0;
-    int is_valid_nacro_name;
+    int macro_status;
     int found;
     int i;
     /* פתיחת קבצים */
@@ -85,55 +116,73 @@ int run_preproc(char *file_name) {
     if (fp_in == NULL) return 0;
 
     am_file = add_new_file(file_name, ".am");
-    fp_out = fopen(am_file, "w");
-    if (fp_out == NULL) {
+    if (am_file==NULL) {
         fclose(fp_in);
         return 0;
     }
+    fp_out = fopen(am_file, "w");
+    if (fp_out == NULL) {
+        fclose(fp_in);
+        free(am_file);
+        return 0;
+    }
 
-    while (fgets(line, 80, fp_in)) {
+    while (fgets(line,MAX_LINE_LENGTH , fp_in)) {
         line_count++;
         strcpy(line_copy, line);
         /* בדוק אם זו הגדרת מאקרו */
-        is_valid_nacro_name=is_macro(line_copy,&mcro_name);
-        if (is_valid_nacro_name==-1) {
+        macro_status=is_macro(line_copy,&mcro_name);
+        if (macro_status==-1) {
             fclose(fp_in);
             fclose(fp_out);
+            free_macro_table(table,table_size);
             free(am_file);
+            return 0;
         }
-        if (is_valid_nacro_name==1) {
+        if (macro_status==1) {
             /* שמור מיקום תחילת תוכן המאקרו */
-            fgetpos(fp_in, &pos);
-            /* שמור את תוכן המאקרו */
+            if (fgetpos(fp_in, &pos)!=0) {
+                fclose(fp_in);
+                fclose(fp_out);
+                free_macro_table(table,table_size);
+                free(am_file);
+                return 0;
+            }
             content = save_macro_content(fp_in, &pos, &line_count);
             if (content == NULL) {
                 fclose(fp_in);
                 fclose(fp_out);
+                free_macro_table(table,table_size);
                 free(am_file);
                 return 0;
             }
 
             /* הוסף לטבלה */
-            temp = realloc(table, (table_size + 1) * sizeof(macro_node));
+            temp = (macro_node *)realloc(table, (table_size + 1) * sizeof(macro_node));
             if (temp==NULL) {
                 fclose(fp_in);
                 fclose(fp_out);
+                free(content);
+                free_macro_table(table,table_size);
                 free(am_file);
                 return 0;
             }
             table = temp;
-
+            table[table_size].name = NULL;
+            table[table_size].content = NULL;
             table[table_size].name = (char *)malloc(strlen(mcro_name) + 1);
             if (table[table_size].name==NULL) {
                 fclose(fp_in);
                 fclose(fp_out);
+                free(content);
+                free_macro_table(table,table_size);
                 free(am_file);
                 return 0;
             }
             strcpy(table[table_size].name, mcro_name);
             table[table_size].content = content;
             table_size++;
-
+            continue;
         }
 
         /* בדוק אם השורה היא קריאה למאקרו */
@@ -150,17 +199,13 @@ int run_preproc(char *file_name) {
         if (!found) {
             fprintf(fp_out, "%s", line);
         }
+
     }
 
     /* ניקוי */
     fclose(fp_in);
     fclose(fp_out);
-    for (i = 0; i < table_size; i++) {
-        free(table[i].name);
-        free(table[i].content);
-    }
-    free(table);
+    free_macro_table(table,table_size);
     free(am_file);
-
     return 1;
 }
