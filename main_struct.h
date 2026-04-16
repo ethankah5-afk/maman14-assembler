@@ -40,7 +40,7 @@ typedef struct generalTable {
     char ARE;
 }generalTable;
 
-typedef struct macro_table {
+typedef struct macro_node {
     char *name;
     char *content;
 }macro_node;
@@ -67,5 +67,7 @@ typedef struct NameRefTable {
     int count;
     int capacity;
 } NameRefTable;
+
+Instruction* findInstruction(char *name);
 
 #endif //ASSEMBLERPROJECT_MAIN_STRUCT_H
