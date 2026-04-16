@@ -1,15 +1,22 @@
 //
 // Created by ethan on 15/03/2026.
 //
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include "first_pass.h"
-
 #include <stdlib.h>
-#include "main_struct.c"
 #include "main_struct.h"
+#include "main_struct.c"
 #define MAX_LINE_LENGTH 80
+#define ADDR_INVALID  -1
+#define ADDR_IMMEDIATE 0
+#define ADDR_DIRECT    1
+#define ADDR_RELATIVE  2
+#define ADDR_REGISTER  3
+
+
 int is_blank_or_comment(char *line) {
     int i=0;
     if (line[0]==';') {
@@ -493,6 +500,30 @@ void free_first_pass_memory(LabelTable *labels,
     free_name_ref_table(externs);
     free_name_ref_table(entries);
 }
+int get_addressing_type(char *op) {
+    if (op == NULL || op[0] == '\0') {
+        return ADDR_INVALID;
+    }
+    if (op[0] == '#') {
+        if (op[1] == '\0') {
+            return ADDR_INVALID;
+        }
+        return ADDR_IMMEDIATE;
+    }
+    if (op[0] == '%') {
+        if (is_label_operands(op + 1)) {
+            return ADDR_RELATIVE;
+        }
+        return ADDR_INVALID;
+    }
+    if (findReg(op) != -1) {
+        return ADDR_REGISTER;
+    }
+    if (is_label_operands(op)) {
+        return ADDR_DIRECT;
+    }
+    return ADDR_INVALID;
+}
 void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     char temp [MAX_LINE_LENGTH];
     char *token;
@@ -516,6 +547,105 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     strcpy(op2,token);
     (*count)++;
 }
+unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count) {
+    unsigned short word = 0;
+    int src_type=0;
+    int dest_type=0;
+    if (op_count==2) {
+        src_type=get_addressing_type(op1);
+        dest_type=get_addressing_type(op2);
+    }
+    else if (op_count==1) {
+        src_type=0;
+        dest_type=get_addressing_type(op1);
+    }
+    else {
+        src_type=0;
+        dest_type=0;
+    }
+    word |= ((unsigned short)inst->opcode << 8);
+    word |= ((unsigned short)inst->funct << 4);
+    word |= ((unsigned short)src_type << 2);
+    word |= (unsigned short)dest_type;
+    return word;
+}
+unsigned short encode_immediate(char *op) {
+    int num=atoi(op+1);
+    return (unsigned short)num;
+}
+
+unsigned short encode_register(char *op) {
+    int reg_num;
+    reg_num=findReg(op);
+    if (reg_num<0){
+        return 0;
+    }
+    return (unsigned short)(1<<reg_num);
+}
+int handle_one_operand(char *op,
+                       int line_num,
+                       LabelTable *labels,
+                       CodeImage *code_img,
+                       int *IC) {
+    int type;
+    int idx;
+    type = get_addressing_type(op);
+    if (type == ADDR_IMMEDIATE) {
+        if (!add_code_word(code_img, encode_immediate(op), NULL, line_num)) {
+            return 0;
+        }
+        (*IC)++;
+        return 1;
+    }
+    if (type == ADDR_REGISTER) {
+        if (!add_code_word(code_img, encode_register(op), NULL, line_num)) {
+            return 0;
+        }
+        (*IC)++;
+        return 1;
+    }
+    if (type == ADDR_DIRECT) {
+        idx = findLabel(labels, op);
+        if (idx != -1 &&
+            labels->arr[idx].is_data == 0 &&
+            labels->arr[idx].is_extern == 0) {
+            if (!add_code_word(code_img,
+                               (unsigned short)labels->arr[idx].address,
+                               NULL,
+                               line_num)) {
+                return 0;
+                               }
+            } else {
+                if (!add_code_word(code_img, 0, op, line_num)) {
+                    return 0;
+                }
+            }
+        (*IC)++;
+        return 1;
+    }
+    if (type == ADDR_RELATIVE) {
+        char rel_label[31];
+        strcpy(rel_label, op + 1);
+        idx = findLabel(labels, rel_label);
+        if (idx != -1 &&
+            labels->arr[idx].is_data == 0 &&
+            labels->arr[idx].is_extern == 0) {
+            if (!add_code_word(code_img,
+                               (unsigned short)(labels->arr[idx].address - (*IC)),
+                               NULL,
+                               line_num)) {
+                return 0;}
+            } else {
+                if (!add_code_word(code_img, 0, rel_label, line_num)) {
+                    return 0;
+                }
+            }
+        (*IC)++;
+        return 1;
+    }
+    return 0;
+}
+
 int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC){
     char temp[MAX_LINE_LENGTH];
     char *token;
@@ -528,6 +658,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     char op1[MAX_LINE_LENGTH];
     char op2[MAX_LINE_LENGTH];
     int op_count;
+    unsigned short first_word;
     strcpy(temp,line);
     token=strtok(temp,"\t\n");
     if (token == NULL) {
@@ -546,19 +677,28 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
             return 0;
         }
     }
-    inst = findInstruction(token);
-    if (inst == NULL){
+    inst=findInstruction(token);
+    if (inst==NULL) {
         return 0;
+    }
+    if (has_label){
+        if (!addLabel(labels,label_name,*IC,0,line_num)) {
+            return 0;
+        }
     }
 
     operands_line = strtok(NULL, "\n");
     parse_operands(operands_line,op1,op2,&op_count);
-
-    words=1+op_count;
-    if (!add_code_word(code_img,0,NULL,line_num)){
+    first_word=build_first_word(inst,op1,op2,op_count);
+    if (!add_code_word(code_img,first_word,NULL,line_num)){
         return 0;
     }
-    if (op_count>=1) {
+    (*IC)++;
+
+    if (op_count==0) {
+        return 0;
+    }
+    if (op_count==1) {
         if (is_label_operands(op1)) {
             if (!add_code_word(code_img,0,op1,line_num)) {
                 return 0;
@@ -593,6 +733,7 @@ void update_data_labels(LabelTable *labels, int IC) {
         }
     }
 }
+
 int handle_first_pass_line(char *line,
                            int line_num,
                            LabelTable *labels,
