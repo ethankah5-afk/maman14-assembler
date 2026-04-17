@@ -7,6 +7,7 @@
 sortMethod sort_methods[]= {
     {'#',0,"immediate"},
     //{.,1,"direct"},
+
     {'%',2,"relative"},
     {'r',3,"register"}
 };
@@ -41,12 +42,6 @@ Instruction* findInstruction(const char *name)
        }
    }
    return NULL;
-}
-int instruction_word_count(Instruction *inst, char *operands_line) {
-    int i;
-    for (i = 0; i <INSTRUCTIONS_COUNT; i++) {
-
-    }
 }
 int findReg(char *str) {
     int i;
