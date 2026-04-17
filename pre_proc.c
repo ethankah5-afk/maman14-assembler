@@ -8,7 +8,6 @@
 #include "pre_proc.h"
 #define MAX_LINE_LENGTH 81
 
-
 static void free_macro_table(macro_node *table, int table_size) {
     int i;
     for (i = 0; i < table_size; i++) {
@@ -97,7 +96,19 @@ int is_macro_call(char *line, char *macro_name) {
     }
     return 1;
 }
-
+int is_blank_or_comment(const char *line) {
+    int i=0;
+    if (line[0]==';') {
+        return 1;
+    }
+    while (line[i]==' '||line[i]=='\t') {
+        i++;
+    }
+    if (line[i]=='\n'||line[i]=='\0') {
+        return 1;
+    }
+    return 0;
+}
 int run_preproc(char *file_name) {
     FILE *fp_in, *fp_out;
     char line[MAX_LINE_LENGTH];
@@ -128,9 +139,11 @@ int run_preproc(char *file_name) {
     }
 
     while (fgets(line,MAX_LINE_LENGTH , fp_in)) {
+        if (is_blank_or_comment(line)) {
+            continue;
+        }
         line_count++;
         strcpy(line_copy, line);
-        /* בדוק אם זו הגדרת מאקרו */
         macro_status=is_macro(line_copy,&mcro_name);
         if (macro_status==-1) {
             fclose(fp_in);
