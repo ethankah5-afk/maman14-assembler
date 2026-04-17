@@ -8,8 +8,7 @@
 #include "first_pass.h"
 #include <stdlib.h>
 #include "main_struct.h"
-#define MAX_LINE_LENGTH 81
-#define ADDR_INVALID  -1
+#define ADDR_INVALID  (-1)
 #define ADDR_IMMEDIATE 0
 #define ADDR_DIRECT    1
 #define ADDR_RELATIVE  2
@@ -81,7 +80,7 @@ int is_label_operands(char *label_name){
     }
     return 1;
 }
-int is_label(char *line_of_file,char *label_name,LabelTable *table) {
+/*int is_label(char *line_of_file,char *label_name,LabelTable *table) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp,line_of_file);
@@ -95,7 +94,7 @@ int is_label(char *line_of_file,char *label_name,LabelTable *table) {
         return 1;
     }
     return 0;
-}
+}*/
 
 int is_data(char *line) {
     char temp[MAX_LINE_LENGTH];
@@ -183,6 +182,9 @@ int initLabelTable(LabelTable *table) {
 
 int findLabel(LabelTable *table, char *name) {
     int i;
+    if (table==NULL||name==NULL) {
+        return -1;
+    }
     for (i = 0; i < table->count; i++) {
         if (strcmp(table->arr[i].symbol_name, name) == 0) {
             return i;
@@ -193,11 +195,9 @@ int findLabel(LabelTable *table, char *name) {
 
 int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined) {
     Label *temp;
-    /* בדיקה אם כבר קיים */
     if (findLabel(table, name) != -1) {
         return 0;
     }
-    /* הגדלת מערך אם צריך */
     if (table->count == table->capacity) {
         table->capacity *= 2;
         temp = (Label *)realloc(table->arr, table->capacity * sizeof(Label));
@@ -206,7 +206,9 @@ int addLabel(LabelTable *table, char *name, int address, int is_data, int line_d
         }
         table->arr = temp;
     }
-    /* הכנסת הנתונים */
+    if (strlen(name)>30) {
+        return 0;
+    }
     strcpy(table->arr[table->count].symbol_name, name);
     table->arr[table->count].address = address;
     table->arr[table->count].line_defined = line_defined;
@@ -321,7 +323,7 @@ void free_label_table(LabelTable *table) {
     table->count = 0;
     table->capacity = 0;
 }
-int handle_entry_line(char *line, int line_num, NameRefTable *entries,LabelTable *table) {
+int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp, line);
@@ -340,6 +342,9 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries,LabelTable
     }
     token = strtok(NULL, " \t\n");
     if (token == NULL || !is_label_operands(token)) {
+        return 0;
+    }
+    if (strtok(NULL, " \t\n")!=NULL) {
         return 0;
     }
     if (!add_name_ref(entries, token, line_num)) {
@@ -371,24 +376,19 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
             return 0;
         }
     }
-    /* חייב להיות .data */
     if (strcmp(token, ".data") != 0) {
         return 0;
     }
-    /* אם יש label, מכניסים אותו לטבלת התוויות */
     if (has_label) {
         if (!addLabel(labels, label_name, *DC, 1, line_num)) {
             return 0;
         }
     }
-    /* עכשיו מתחילים לקרוא את המספרים */
     token = strtok(NULL, ", \t\n");
     if (token == NULL) {
         return 0;
     }
     while (token != NULL) {
-
-        num = atoi(token);
         if (!is_valid_number(token,&num)){
             return 0;
         }
@@ -409,6 +409,9 @@ int is_valid_number(const char *token, int *value) {
     }
     num = strtol(token, &endptr, 10);
     if (*endptr != '\0') {
+        return 0;
+    }
+    if (num<-2048||num>2047){
         return 0;
     }
     *value= (int)num;
@@ -566,6 +569,10 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     }
     strcpy(op2,token);
     (*count)++;
+    token = strtok(NULL, ",");
+    if (token != NULL) {
+        *count = -1; /* למשל סימון שגיאה */
+    }
 }
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count) {
     unsigned short word = 0;
@@ -590,9 +597,13 @@ unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_
     return word;
 }
 unsigned short encode_immediate(char *op) {
-    int num=atoi(op+1);
-    return (unsigned short)num;
+    int num;
+    if (!is_valid_number(op + 1, &num)) {
+        return 0;
+    }
+    return (unsigned short)(num & 0x0FFF);
 }
+
 
 unsigned short encode_register(char *op) {
     int reg_num;
@@ -756,7 +767,7 @@ int handle_first_pass_line(char *line,
         return 1;
     }
     if (is_entry(line)) {
-        return handle_entry_line(line, line_num, entries,labels);
+        return handle_entry_line(line, line_num, entries);
     }
     if (is_extern(line, extern_label)) {
         if (!addLabel(labels,extern_label,0,0,line_num)) { return 0; }
