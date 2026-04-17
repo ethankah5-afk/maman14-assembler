@@ -16,7 +16,7 @@
 int is_valid_number(const char *token, int *value);
 int is_valid_label(char *label_name, LabelTable *table);
 int is_label_operands(char *label_name);
-int is_label(char *line_of_file,char *label_name,LabelTable *table);
+//int is_label(char *line_of_file,char *label_name,LabelTable *table);
 int is_data(char *line);
 int is_entry(char *line);
 int is_extern(char *line, char *label_name);
@@ -36,11 +36,13 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
 int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
 int init_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
 void free_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
+void trim_spaces(char *str);
 void parse_operands(char *operands_line, char *op1, char *op2, int *count);
 int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC);
 void update_data_labels(LabelTable *labels, int IC);
 int handle_first_pass_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int *IC,int *DC);
 int exe_first_pass(char *file_name);
-
+int is_one_of(int type, int a, int b, int c, int d);
+int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count);
 
 #endif //ASSEMBLERPROJECT_FIRST_PASS_H
