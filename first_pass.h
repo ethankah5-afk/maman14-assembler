@@ -5,14 +5,12 @@
 #ifndef ASSEMBLERPROJECT_FIRST_PASS_H
 #define ASSEMBLERPROJECT_FIRST_PASS_H
 
-#include "first_pass.h"
 #include "main_struct.h"
+#include "pre_proc.h"
 
+#define MAX_LINE_LENGTH 81
 
-#define MAX_LINE_LENGTH 80
-
-
-int is_blank_or_comment(char *line);
+int is_valid_number(const char *token, int *value);
 int is_valid_label(char *label_name, LabelTable *table);
 int is_label_operands(char *label_name);
 int is_label(char *line_of_file,char *label_name,LabelTable *table);
