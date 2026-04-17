@@ -4,13 +4,7 @@
 #include "main_struct.h"
 #define REG_COUNT 8
 #define INSTRUCTIONS_COUNT 16
-sortMethod sort_methods[]= {
-    {'#',0,"immediate"},
-    //{.,1,"direct"},
 
-    {'%',2,"relative"},
-    {'r',3,"register"}
-};
 Instruction instructionTable[] = {
    {"mov",  0,  0, 2},
    {"cmp",  1,  0, 2},
