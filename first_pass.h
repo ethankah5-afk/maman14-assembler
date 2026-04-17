@@ -5,8 +5,11 @@
 #ifndef ASSEMBLERPROJECT_FIRST_PASS_H
 #define ASSEMBLERPROJECT_FIRST_PASS_H
 
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include "main_struct.h"
-#include "pre_proc.h"
 
 #define MAX_LINE_LENGTH 81
 
@@ -17,6 +20,7 @@ int is_label(char *line_of_file,char *label_name,LabelTable *table);
 int is_data(char *line);
 int is_entry(char *line);
 int is_extern(char *line, char *label_name);
+int is_string(char *line);
 int initLabelTable(LabelTable *table);
 int findLabel(LabelTable *table, char *name);
 int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined);
@@ -27,7 +31,7 @@ int  init_name_ref_table(NameRefTable *table);
 void free_name_ref_table(NameRefTable *table);
 int add_name_ref(NameRefTable *table, const char *name, int line);
 void free_label_table(LabelTable *table);
-int handle_entry_line(char *line, int line_num, NameRefTable *entries,LabelTable *table);
+int handle_entry_line(char *line, int line_num, NameRefTable *entries);
 int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
 int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
 int init_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
