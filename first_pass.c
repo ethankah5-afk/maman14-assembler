@@ -756,14 +756,23 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
-    Instruction *inst;
-    char *operands_line;
-    int has_label=0;
+    char *operands_line;;
     char op1[MAX_LINE_LENGTH];
     char op2[MAX_LINE_LENGTH];
+    int has_label
     int op_count;
+    int src_type; 
+    int dest_type; 
+    Instruction *inst;
     unsigned short first_word;
+
+    has_label =0; 
+    op_count -0; 
+    src_type=0;
+    dest_type=0; 
+    
     strcpy(temp,line);
+    
     token=strtok(temp," \t\n");
     if (token == NULL) {
         return 0;
@@ -791,14 +800,43 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         }
     }
     operands_line = strtok(NULL, "\n");
+
+    op1[0] = '\0';
+    op2[0] = '\0';
+    
     parse_operands(operands_line,op1,op2,&op_count);
-    first_word=build_first_word(inst,op1,op2,op_count);
+    
+    
     if (op_count==-1) {
         return 0;
     }
     if (op_count!=inst->operand_count) {
         return 0;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    first_word=build_first_word(inst,op1,op2,op_count);
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         return 0;
     }
@@ -866,7 +904,6 @@ int exe_first_pass(char *file_name) {
     int line_num;
     int IC, DC;
     int error_found;
-
     LabelTable labels;
     CodeImage code_img;
     CodeImage data_img;
