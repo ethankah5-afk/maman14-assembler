@@ -4,6 +4,7 @@
 #ifndef ASSEMBLERPROJECT_PREPROC_H
 #define ASSEMBLERPROJECT_PREPROC_H
 #include <stdio.h>
+int is_blank_or_comment(const char *line);
 static void free_macro_table(macro_node *table, int table_size);
 char *add_new_file(char *file_name,char *ending);
 int is_macro(char *line_num,char **mcro_name);
