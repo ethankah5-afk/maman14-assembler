@@ -9,7 +9,7 @@ typedef struct Instruction{
     char *name;
     int opcode;
     int funct;
-    int num_of_op;
+    int operand_count;
 }Instruction;
 
 typedef struct sortMethod {
