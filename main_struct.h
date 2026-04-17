@@ -1,46 +1,73 @@
 //
-// Created by ethan on 15/03/2026.
+// Created by ethan on 08/03/2026.
 //
 
-#ifndef ASSEMBLERPROJECT_FIRST_PASS_H
-#define ASSEMBLERPROJECT_FIRST_PASS_H
+#ifndef ASSEMBLERPROJECT_MAIN_STRUCT_H
+#define ASSEMBLERPROJECT_MAIN_STRUCT_H
+int findReg(char *str);
+typedef struct Instruction{
+    char *name;
+    int opcode;
+    int funct;
+    int operand_count;
+}Instruction;
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include "main_struct.h"
+typedef struct sortMethod {
+    char method_symbol;
+    int num;
+    char *name;
+}sortMethod;
 
-#define MAX_LINE_LENGTH 81
+typedef struct Label{
+    char symbol_name[31];
+    int address;
+    int line_defined;
+    int is_data;
+    int is_entry;
+    int is_extern;
+}Label;
 
-int is_valid_number(const char *token, int *value);
-int is_valid_label(char *label_name, LabelTable *table);
-int is_label_operands(char *label_name);
-int is_label(char *line_of_file,char *label_name,LabelTable *table);
-int is_data(char *line);
-int is_entry(char *line);
-int is_extern(char *line, char *label_name);
-int is_string(char *line);
-int initLabelTable(LabelTable *table);
-int findLabel(LabelTable *table, char *name);
-int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined);
-int add_code_word(CodeImage *img, unsigned short value, const char *label, int line);
-void free_code_image(CodeImage *img);
-int init_code_image(CodeImage *img);
-int  init_name_ref_table(NameRefTable *table);
-void free_name_ref_table(NameRefTable *table);
-int add_name_ref(NameRefTable *table, const char *name, int line);
-void free_label_table(LabelTable *table);
-int handle_entry_line(char *line, int line_num, NameRefTable *entries);
-int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
-int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table);
-int init_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
-void free_first_pass_memory(LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries);
-void parse_operands(char *operands_line, char *op1, char *op2, int *count);
-int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC);
-void update_data_labels(LabelTable *labels, int IC);
-int handle_first_pass_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int *IC,int *DC);
-int exe_first_pass(char *file_name);
+typedef struct LabelTable{
+    Label *arr;
+    int count;
+    int capacity;
+} LabelTable;
 
+typedef struct generalTable {
+    int address;
+    char *source_code;
+    char *binary_code;
+    char ARE;
+}generalTable;
 
-#endif //ASSEMBLERPROJECT_FIRST_PASS_H
+typedef struct macro_node {
+    char *name;
+    char *content;
+}macro_node;
+
+typedef struct CodeWord {
+    unsigned short value;
+    char *label;
+    int assembly_line;
+} CodeWord;
+
+typedef struct CodeImage {
+    CodeWord *arr;
+    int count;
+    int capacity;
+} CodeImage;
+
+typedef struct NameRef {
+    char *name;
+    int assembly_line;
+} NameRef;
+
+typedef struct NameRefTable {
+    NameRef *arr;
+    int count;
+    int capacity;
+} NameRefTable;
+
+Instruction* findInstruction(const char *name);
+
+#endif //ASSEMBLERPROJECT_MAIN_STRUCT_H
