@@ -528,7 +528,8 @@ int get_addressing_type(char *op) {
         return ADDR_INVALID;
     }
     if (op[0] == '#') {
-        if (op[1] == '\0') {
+        int num;
+        if (!is_valid_number(op+1,&num)) {
             return ADDR_INVALID;
         }
         return ADDR_IMMEDIATE;
@@ -562,12 +563,14 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
         return;
     }
     strcpy(op1,token);
+    trim_spaces(op1);
     (*count)++;
     token=strtok(NULL,",");
     if (token==NULL) {
         return;
     }
     strcpy(op2,token);
+    trim_spaces(op1);
     (*count)++;
     token = strtok(NULL, ",");
     if (token != NULL) {
@@ -612,6 +615,24 @@ unsigned short encode_register(char *op) {
         return 0;
     }
     return (unsigned short)(1<<reg_num);
+}
+void trim_spaces(char *str) {
+    char *start = str;
+    char *end;
+
+    while (isspace((unsigned char)*start)) {
+        start++;
+    }
+
+    if (start != str) {
+        memmove(str, start, strlen(start) + 1);
+    }
+
+    end = str + strlen(str) - 1;
+    while (end >= str && isspace((unsigned char)*end)) {
+        *end = '\0';
+        end--;
+    }
 }
 int handle_one_operand(char *op,
                        int line_num,
@@ -676,14 +697,67 @@ int handle_one_operand(char *op,
     }
     return 0;
 }
+int is_one_of(int type, int a, int b, int c, int d) {
+    return (type == a || type == b || type == c || type == d);
+}
+int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count) {
+    if (inst == NULL) {
+        return 0;
+    }
+    switch (inst->opcode) {
+        case 0: /* mov */
+            return op_count == 2 &&
+                   is_one_of(src_type, 0, 1, 3, -1) &&
+                   is_one_of(dest_type, 1, 3, -1, -1);
 
+        case 1: /* cmp */
+            return op_count == 2 &&
+                   is_one_of(src_type, 0, 1, 3, -1) &&
+                   is_one_of(dest_type, 0, 1, 3, -1);
+
+        case 2: /* add/sub */
+            if (inst->funct == 10 || inst->funct == 11) {
+                return op_count == 2 &&
+                       is_one_of(src_type, 0, 1, 3, -1) &&
+                       is_one_of(dest_type, 1, 3, -1, -1);
+            }
+            return 0;
+
+        case 4: /* lea */
+            return op_count == 2 &&
+                   src_type == 1 &&
+                   is_one_of(dest_type, 1, 3, -1, -1);
+
+        case 5: /* clr/not/inc/dec */
+            return op_count == 1 &&
+                   is_one_of(dest_type, 1, 3, -1, -1);
+
+        case 9: /* jmp/bne/jsr */
+            return op_count == 1 &&
+                   is_one_of(dest_type, 1, 2, -1, -1);
+
+        case 12: /* red */
+            return op_count == 1 &&
+                   is_one_of(dest_type, 1, 3, -1, -1);
+
+        case 13: /* prn */
+            return op_count == 1 &&
+                   is_one_of(dest_type, 0, 1, 3, -1);
+
+        case 14: /* rts */
+        case 15: /* stop */
+            return op_count == 0;
+
+        default:
+            return 0;
+    }
+}
 int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC){
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
     Instruction *inst;
     char *operands_line;
-    int words=0;
     int has_label=0;
     char op1[MAX_LINE_LENGTH];
     char op2[MAX_LINE_LENGTH];
@@ -716,10 +790,15 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
             return 0;
         }
     }
-
     operands_line = strtok(NULL, "\n");
     parse_operands(operands_line,op1,op2,&op_count);
     first_word=build_first_word(inst,op1,op2,op_count);
+    if (op_count==-1) {
+        return 0;
+    }
+    if (op_count!=inst->operand_count) {
+        return 0;
+    }
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         return 0;
     }
@@ -736,7 +815,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         if (!handle_one_operand(op1,line_num,labels,code_img,IC)) {
             return 0;
         }
-        if (!handle_one_operand(op1,line_num,labels,code_img,IC)) {
+        if (!handle_one_operand(op2,line_num,labels,code_img,IC)) {
             return 0;
         }
         return 1;
@@ -763,9 +842,6 @@ int handle_first_pass_line(char *line,
                            int *IC,
                            int *DC) {
     char extern_label[31];
-    if (is_blank_or_comment(line)) {
-        return 1;
-    }
     if (is_entry(line)) {
         return handle_entry_line(line, line_num, entries);
     }
@@ -797,7 +873,7 @@ int exe_first_pass(char *file_name) {
     NameRefTable externs;
     NameRefTable entries;
     line_num = 0;
-    IC = 0;
+    IC = 100;
     DC = 0;
     error_found = 0;
 
