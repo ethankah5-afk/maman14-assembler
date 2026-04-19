@@ -895,7 +895,7 @@ token = strtok(temp, " \t\n");
 if (token ==NULL) {
     return LINE_EMPTY; }
 
-if( [token[strlen(token)-1] == ':') { 
+if( strlen(token)> 0 && token[strlen(token)-1] == ':') { 
     token = strtok(NULL," \t\n"); 
     if (token ==NULL) {
     return LINE_ERROR; }}
