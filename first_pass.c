@@ -570,7 +570,7 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
         return;
     }
     strcpy(op2,token);
-    trim_spaces(op1);
+    trim_spaces(op2);
     (*count)++;
     token = strtok(NULL, ",");
     if (token != NULL) {
@@ -619,7 +619,7 @@ unsigned short encode_register(char *op) {
 void trim_spaces(char *str) {
     char *start = str;
     char *end;
-
+    
     while (isspace((unsigned char)*start)) {
         start++;
     }
@@ -627,7 +627,9 @@ void trim_spaces(char *str) {
     if (start != str) {
         memmove(str, start, strlen(start) + 1);
     }
-
+    if (*str=='\0') {
+        return;
+    }
     end = str + strlen(str) - 1;
     while (end >= str && isspace((unsigned char)*end)) {
         *end = '\0';
@@ -759,20 +761,20 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     char *operands_line;;
     char op1[MAX_LINE_LENGTH];
     char op2[MAX_LINE_LENGTH];
-    int has_label
+    int has_label;
     int op_count;
-    int src_type; 
-    int dest_type; 
+    int src_type;
+    int dest_type;
     Instruction *inst;
     unsigned short first_word;
 
-    has_label =0; 
-    op_count -0; 
+    has_label =0;
+    op_count =0;
     src_type=0;
-    dest_type=0; 
-    
+    dest_type=0;
+
     strcpy(temp,line);
-    
+
     token=strtok(temp," \t\n");
     if (token == NULL) {
         return 0;
@@ -803,10 +805,20 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
 
     op1[0] = '\0';
     op2[0] = '\0';
-    
+
+    if (operands_line != NULL) {
+        if (strstr(operands_line, ",,") != NULL) {
+            return 0;
+        }
+        if (operands_line[0] == ',') {
+            return 0;
+        }
+        if (operands_line[strlen(operands_line) - 1] == ',') {
+            return 0;
+        }
+    }
     parse_operands(operands_line,op1,op2,&op_count);
-    
-    
+
     if (op_count==-1) {
         return 0;
     }
@@ -814,36 +826,31 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         return 0;
     }
 
-
-
-
-if (op_count ==2) { 
-src_type = get_adrressing_type(op1); 
-dest_type = get_adrressing_type(op2);
-
-    if (src_type == ADDT_INVALID || dest_type ==ADDR_INVALID) { 
-    return 0; } 
-
-    if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
-    return 0;}
-
-} 
-
-else if (op_count ==1) { 
-    dest_type = get_addressing_type(op1); 
-    if (dest_type == ADDR_INVALID) { 
-        return 0; ) 
-    if (!is_legal_adressing(inst, 0, dest_type, op_count) { 
-        return 0; }
-    } 
-else { 
-    if (!is_legal_addressing(inst,0,0,op_count)) { 
-        return 0; } 
-}
-                                
-    
+    if (op_count ==2) {
+        src_type = get_addressing_type(op1);
+        dest_type = get_addressing_type(op2);
+        if (src_type == ADDR_INVALID || dest_type ==ADDR_INVALID) {
+            return 0; 
+        }
+        if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
+            return 0;
+        }
+    }
+    else if (op_count ==1) {
+        dest_type = get_addressing_type(op1);
+        if (dest_type == ADDR_INVALID) {
+            return 0;
+        }
+        if (!is_legal_addressing(inst, 0, dest_type, op_count)) {
+            return 0;
+        }
+    }
+    else{
+        if (!is_legal_addressing(inst,0,0,op_count)) {
+            return 0;
+        }
+    }
     first_word=build_first_word(inst,op1,op2,op_count);
-    
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         return 0;
     }
@@ -885,7 +892,7 @@ int handle_first_pass_line(char *line,
                            NameRefTable *externs,
                            NameRefTable *entries,
                            int *IC,
-                           int *DC) {
+                           int *DC){
     char extern_label[31];
     if (is_entry(line)) {
         return handle_entry_line(line, line_num, entries);
@@ -905,7 +912,7 @@ int handle_first_pass_line(char *line,
 }
 //int is_blank_or_comment(char *line);
 //int is_valid_label(char *line);
-int exe_first_pass(char *file_name) {
+int exe_first_pass(char *file_name){
     FILE *fp;
     char line[MAX_LINE_LENGTH];
     int line_num;
