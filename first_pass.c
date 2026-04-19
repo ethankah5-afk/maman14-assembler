@@ -884,6 +884,69 @@ void update_data_labels(LabelTable *labels, int IC) {
     }
 }
 
+
+int detect_line_type(char *line) { 
+char temp[MAX_LINE_LENGTH]; 
+char *token; 
+
+strcpy(temp,line);
+token = strtok(temp, " \t\n");
+
+if (token ==NULL) {
+    return LINE_EMPTY; }
+
+if( [token[strlen(token)-1] == ':') { 
+    token = strtok(NULL," \t\n"); 
+    if (token ==NULL) {
+    return LINE_ERROR; }}
+
+if (strcmp(token,".entry") == 0) { 
+    return LINE_ENTRY; } 
+
+if (strcmp(token,".extern") == 0) { 
+    return LINE_EXTERN; } 
+
+if (strcmp(token,".data") == 0) { 
+    return LINE_DATA; } 
+
+if (strcmp(token,".string") == 0) { 
+    return LINE_STRING; } 
+
+if (findInstruction(token) != NULL) { 
+return LINE_INSTRUCTION; } 
+
+return LINE_ERROR; } 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int handle_first_pass_line(char *line,
                            int line_num,
                            LabelTable *labels,
