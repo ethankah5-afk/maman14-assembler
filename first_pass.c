@@ -917,34 +917,44 @@ return LINE_INSTRUCTION; }
 
 return LINE_ERROR; } 
 
+int handle_extern_line(char *line, int line_num, Label Table *labels, NameRefTable *externs, char *label_name) { 
 
+char temp[MAX_LINE_LENGTH];
+char *token; 
 
+strcpy(temp,line); 
+token = strtok(temp," \t\n"); 
 
+if (token == NULL) { 
+return 0; } 
 
+if (token[strlen(token) -1] == ':') {
+    return 0; } 
 
+if (strcmp(token, ".extern") !=0) { 
+    return 0; } 
 
+token = strtok(NULL, " \t\n"); 
+if (token ==NULL || !is_valid_label(token,NULL)) { 
+    return 0; } 
 
+strcpy(label_name, token); 
 
+token = strtok(NULL, " \t\n"); 
+if (token!=NULL) {
+ return 0; } 
 
+if (!addLabel(labels, label_name, 0,0,line_num)) {
+return 0; } 
 
+labels->arr[labels->count - 1].is_extern = 1;
 
+    if (!add_name_ref(externs, label_name, line_num)) {
+        return 0;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return 1;
+}
 
 
 int handle_first_pass_line(char *line,
