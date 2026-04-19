@@ -13,6 +13,14 @@
 #define ADDR_DIRECT    1
 #define ADDR_RELATIVE  2
 #define ADDR_REGISTER  3
+#define LINE_ERROR -1
+#define LINE_EMPTY 0
+#define LINE_ENTRY 1
+#define LINE_EXTERN 2
+#define LINE_DATA 3
+#define LINE_STRING 4
+#define LINE_INSTRUCTION 5
+
 
 int is_valid_label(char *label_name, LabelTable *table){
     int i;
@@ -459,7 +467,14 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
         return 0;
     }
     end_quote = strrchr(line, '"');
-    if (end_quote == NULL || end_quote == start_quote) {
+    end_quote++;
+    while (*end_quote == ' ' || *end_quote == '\t' || *end_quote == '\n') {
+        end_quote++;
+    }
+    if (*end_quote != '\0') {
+        return 0;
+    }
+    if (end_quote == start_quote) {
         return 0;
     }
     start_quote++;
@@ -619,7 +634,7 @@ unsigned short encode_register(char *op) {
 void trim_spaces(char *str) {
     char *start = str;
     char *end;
-    
+
     while (isspace((unsigned char)*start)) {
         start++;
     }
@@ -830,7 +845,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         src_type = get_addressing_type(op1);
         dest_type = get_addressing_type(op2);
         if (src_type == ADDR_INVALID || dest_type ==ADDR_INVALID) {
-            return 0; 
+            return 0;
         }
         if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
             return 0;
@@ -884,70 +899,67 @@ void update_data_labels(LabelTable *labels, int IC) {
     }
 }
 
-
-int detect_line_type(char *line) { 
-char temp[MAX_LINE_LENGTH]; 
-char *token; 
-
-strcpy(temp,line);
-token = strtok(temp, " \t\n");
-
-if (token ==NULL) {
-    return LINE_EMPTY; }
-
-if( strlen(token)> 0 && token[strlen(token)-1] == ':') { 
-    token = strtok(NULL," \t\n"); 
+int detect_line_type(char *line) {
+    char temp[MAX_LINE_LENGTH];
+    char *token;
+    strcpy(temp,line);
+    token = strtok(temp, " \t\n");
     if (token ==NULL) {
-    return LINE_ERROR; }}
+        return LINE_EMPTY; }
+    if(strlen(token)> 0 && token[strlen(token)-1] == ':') {
+        token = strtok(NULL," \t\n");
+        if (token ==NULL) {
+            return LINE_ERROR;
+        }
+    }
+    if (strcmp(token,".entry") == 0) {
+        return LINE_ENTRY;
+    }
+    if (strcmp(token,".extern") == 0) {
+        return LINE_EXTERN;
+    }
+    if (strcmp(token,".data") == 0) {
+        return LINE_DATA;
+    }
+    if (strcmp(token,".string") == 0) {
+        return LINE_STRING;
+    }
+    if (findInstruction(token) != NULL) {
+        return LINE_INSTRUCTION;
+    }
+    return LINE_ERROR;
+}
 
-if (strcmp(token,".entry") == 0) { 
-    return LINE_ENTRY; } 
+int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name) {
+    char temp[MAX_LINE_LENGTH];
+    char *token;
 
-if (strcmp(token,".extern") == 0) { 
-    return LINE_EXTERN; } 
+    strcpy(temp,line);
+    token = strtok(temp," \t\n");
 
-if (strcmp(token,".data") == 0) { 
-    return LINE_DATA; } 
+    if (token == NULL) {
+        return 0; }
 
-if (strcmp(token,".string") == 0) { 
-    return LINE_STRING; } 
+    if (token[strlen(token) -1] == ':') {
+        return 0; }
 
-if (findInstruction(token) != NULL) { 
-return LINE_INSTRUCTION; } 
+    if (strcmp(token, ".extern") !=0) {
+        return 0; }
 
-return LINE_ERROR; } 
+    token = strtok(NULL, " \t\n");
+    if (token ==NULL || !is_valid_label(token,NULL)) {
+        return 0; }
 
-int handle_extern_line(char *line, int line_num, Label Table *labels, NameRefTable *externs, char *label_name) { 
+    strcpy(label_name, token);
 
-char temp[MAX_LINE_LENGTH];
-char *token; 
+    token = strtok(NULL, " \t\n");
+    if (token!=NULL) {
+        return 0; }
 
-strcpy(temp,line); 
-token = strtok(temp," \t\n"); 
+    if (!addLabel(labels, label_name, 0,0,line_num)) {
+        return 0; }
 
-if (token == NULL) { 
-return 0; } 
-
-if (token[strlen(token) -1] == ':') {
-    return 0; } 
-
-if (strcmp(token, ".extern") !=0) { 
-    return 0; } 
-
-token = strtok(NULL, " \t\n"); 
-if (token ==NULL || !is_valid_label(token,NULL)) { 
-    return 0; } 
-
-strcpy(label_name, token); 
-
-token = strtok(NULL, " \t\n"); 
-if (token!=NULL) {
- return 0; } 
-
-if (!addLabel(labels, label_name, 0,0,line_num)) {
-return 0; } 
-
-labels->arr[labels->count - 1].is_extern = 1;
+    labels->arr[labels->count - 1].is_extern = 1;
 
     if (!add_name_ref(externs, label_name, line_num)) {
         return 0;
@@ -965,23 +977,28 @@ int handle_first_pass_line(char *line,
                            NameRefTable *externs,
                            NameRefTable *entries,
                            int *IC,
-                           int *DC){
+                           int *DC) {
+    int line_type;
     char extern_label[31];
-    if (is_entry(line)) {
-        return handle_entry_line(line, line_num, entries);
+    line_type=detect_line_type(line);
+
+    switch(line_type) {
+        case LINE_EMPTY:
+            return 1;
+        case LINE_ENTRY:
+            return handle_entry_line(line,line_num,entries);
+        case LINE_EXTERN:
+            return handle_extern_line(line,line_num,labels,externs,extern_label);
+        case LINE_DATA:
+            return handle_data_line(line,line_num,labels,data_img,DC,labels);
+        case LINE_STRING:
+            return handle_string_line(line,line_num,labels,data_img,DC,labels);
+        case LINE_INSTRUCTION:
+            return handle_instruction_line(line,line_num,labels,code_img,IC);
+        case LINE_ERROR:
+        default:
+            return 0;
     }
-    if (is_extern(line, extern_label)) {
-        if (!addLabel(labels,extern_label,0,0,line_num)) { return 0; }
-        labels->arr[labels->count - 1].is_extern =1;
-        return add_name_ref(externs, extern_label, line_num);
-    }
-    if (is_data(line)) {
-        return handle_data_line(line, line_num, labels, data_img, DC,labels);
-    }
-    if (is_string(line)) {
-        return handle_string_line(line, line_num, labels, data_img, DC,labels);
-    }
-    return handle_instruction_line(line, line_num, labels, code_img, IC);
 }
 //int is_blank_or_comment(char *line);
 //int is_valid_label(char *line);
