@@ -817,19 +817,17 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
 
 
 
+if (op_count ==2) { 
+src_type = get_adrressing_type(op1); 
+dest_type = get_adrressing_type(op2);
 
+    if (src_type == ADDT_INVALID || dest_type ==ADDR_INVALID) { 
+    return 0; } 
 
+    if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
+    return 0;}
 
-
-
-
-
-
-
-
-
-
-
+} 
 
 else if (op_count ==1) { 
     dest_type = get_addressing_type(op1); 
@@ -843,11 +841,9 @@ else {
         return 0; } 
 }
                                 
-
-
-
     
     first_word=build_first_word(inst,op1,op2,op_count);
+    
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         return 0;
     }
