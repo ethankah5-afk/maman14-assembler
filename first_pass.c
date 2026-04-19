@@ -104,13 +104,12 @@ int is_label_operands(char *label_name){
     return 0;
 }*/
 
-int is_data(char *line) {
+/*int is_data(char *line) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp, line);
     token = strtok(temp, " \t\n");
     if (token == NULL) return 0;
-    /* skip label if exists */
     if (token[strlen(token) - 1] == ':') {
         token = strtok(NULL, " \t\n");
         if (token == NULL) return 0;
@@ -123,7 +122,6 @@ int is_string(char *line) {
     strcpy(temp, line);
     token = strtok(temp, " \t\n");
     if (token == NULL) return 0;
-    /* skip label if exists */
     if (token[strlen(token) - 1] == ':') {
         token = strtok(NULL, " \t\n");
         if (token == NULL) return 0;
@@ -177,7 +175,7 @@ int is_extern(char *line, char *label_name) {
     if (token != NULL) return 0;
 
     return 1;
-}
+}*/
 int initLabelTable(LabelTable *table) {
     table->count = 0;
     table->capacity = 10;
@@ -466,16 +464,20 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     if (start_quote == NULL) {
         return 0;
     }
+
     end_quote = strrchr(line, '"');
-    end_quote++;
-    while (*end_quote == ' ' || *end_quote == '\t' || *end_quote == '\n') {
-        end_quote++;
-    }
-    if (*end_quote != '\0') {
+    if (end_quote == NULL || end_quote == start_quote) {
         return 0;
     }
-    if (end_quote == start_quote) {
-        return 0;
+    /* בדיקת extra text אחרי המחרוזת */
+    {
+        char *after_quote = end_quote + 1;
+        while (*after_quote == ' ' || *after_quote == '\t' || *after_quote == '\n') {
+            after_quote++;
+        }
+        if (*after_quote != '\0') {
+            return 0;
+        }
     }
     start_quote++;
     for (i = 0; start_quote + i < end_quote; i++) {
