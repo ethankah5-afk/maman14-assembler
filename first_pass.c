@@ -831,7 +831,18 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
 
 
 
-
+else if (op_count ==1) { 
+    dest_type = get_addressing_type(op1); 
+    if (dest_type == ADDR_INVALID) { 
+        return 0; ) 
+    if (!is_legal_adressing(inst, 0, dest_type, op_count) { 
+        return 0; }
+    } 
+else { 
+    if (!is_legal_addressing(inst,0,0,op_count)) { 
+        return 0; } 
+}
+                                
 
 
 
