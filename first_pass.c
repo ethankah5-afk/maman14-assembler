@@ -869,7 +869,7 @@ else {
         }
         return 1;
     }
-    return 1;
+    return 0;
 }
 
 void update_data_labels(LabelTable *labels, int IC) {
