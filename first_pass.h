@@ -27,7 +27,7 @@ int addLabel(LabelTable *table, char *name, int address, int is_data, int line_d
 int add_code_word(CodeImage *img, unsigned short value, const char *label, int line);
 void free_code_image(CodeImage *img);
 int init_code_image(CodeImage *img);
-int  init_name_ref_table(NameRefTable *table);
+int init_name_ref_table(NameRefTable *table);
 void free_name_ref_table(NameRefTable *table);
 int add_name_ref(NameRefTable *table, const char *name, int line);
 void free_label_table(LabelTable *table);
@@ -44,5 +44,7 @@ int handle_first_pass_line(char *line,int line_num,LabelTable *labels,CodeImage 
 int exe_first_pass(char *file_name);
 int is_one_of(int type, int a, int b, int c, int d);
 int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count);
+int detect_line_type(char *line);
+int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name);
 
 #endif //ASSEMBLERPROJECT_FIRST_PASS_H
