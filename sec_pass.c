@@ -96,6 +96,42 @@ int collect_entries_output(LableTable *labels, FILE *fp) {
             printf("ENTRY: %s %d\n", labels->arr[i].symbol_name, labels->arr[i].address);  }
     }
 }
+
+int write_ext_file(char *file_name, CodeImage *code_img, LableTable *labels) { 
+
+int i; 
+FILE *fp; 
+char ext_name[256]; 
+
+spritnf(ext_name, "%s.ext", file_name); 
+
+    fp = fpoen(ext_name, "w"); 
+    if (fp==NULL) { 
+        return 0;} 
+
+for (i=0; i<code_img->count;i++) { 
+
+    CodeWord *word = find_label_by _name(labels, word->label);
+    if(word->label !=NULL) { 
+        Label *lbl = find_label_by_name(labels, word_>label); 
+        if (lbl!=NULL && lbl->is_extern) { 
+            fprintf(fp,"%s %d\n", word->label, 100+i); 
+        }
+    }
+}
+    fclose(fp); 
+    return 1; } 
+
+
+
+
+
+
+
+
+
+}
+
 int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int IC,int DC) {
     int error_found=0;
     if (!resolve_code_labels(code_img,labels,externs)) {
