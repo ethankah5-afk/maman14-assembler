@@ -90,26 +90,26 @@ int write_ent_file(char *file_name,LabelTable *labels) {
     fclose(fp);
     return 1;
 }
-int write_ext_file(char *file_name, CodeImage *code_img, LabelTable *labels) { 
-    int i; 
-    FILE *fp; 
-    char ext_name[256]; 
-    sprintf(ext_name, "%s.ext", file_name); 
-    fp = fopen(ext_name, "w"); 
-    if (fp==NULL) { 
+int write_ext_file(char *file_name, CodeImage *code_img, LabelTable *labels) {
+    int i;
+    FILE *fp;
+    char ext_name[256];
+    sprintf(ext_name, "%s.ext", file_name);
+    fp = fopen(ext_name, "w");
+    if (fp==NULL) {
         return 0;
-    } 
-    for (i=0; i<code_img->count;i++) { 
+    }
+    for (i=0; i<code_img->count;i++) {
         CodeWord *word = &code_img->arr[i];
-        if(word->label !=NULL) { 
-            Label *lbl = find_label_by_name(labels, word->label); 
-            if (lbl!=NULL && lbl->is_extern) { 
-                fprintf(fp,"%s %d\n", word->label, 100+i); 
+        if(word->label !=NULL) {
+            Label *lbl = find_label_by_name(labels, word->label);
+            if (lbl!=NULL && lbl->is_extern) {
+                fprintf(fp,"%s %d\n", word->label, 100+i);
             }
         }
     }
-    fclose(fp); 
-    return 1; 
+    fclose(fp);
+    return 1;
 }
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC, int DC) {
     FILE *fp;
@@ -139,7 +139,7 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
 }*/
 int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int IC,int DC) {
     int error_found=0;
-    if (!resolve_code_lables(code_img,labels,externs)) {
+    if (!resolve_code_labels(code_img,labels,externs)) {
         error_found=1;
     }
     if (!mark_entry_labels(labels,entries)) {
