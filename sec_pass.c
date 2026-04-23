@@ -84,7 +84,23 @@ int i;
 
 
 
+int mark_entry_labels(LableTable *labels, NameRefTable *entries) { 
+
+int i;
+Label lbl; 
+
+    for(i=0; i<(entries->size);i++) {
+         lbl = find_label_by_name(labels, entries->arr[i].name); 
+
+        if(lbl ==NULL) 
+            return 0; 
+        if(lbl->is_extern) 
+            return 0; 
+        lbl->is_entry = 1; 
+    } 
+    return 1; 
         
+}
 
 
 
