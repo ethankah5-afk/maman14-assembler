@@ -103,7 +103,21 @@ Label lbl;
 }
 
 
+int collect_entries_output(LableTable *labels, FILE *fp) { 
 
+    int i; 
+
+    for (i=0; i<labels->size; i++) { 
+
+        if (labels->arr[i].is_entry) { 
+
+        printf("ENTRY: %s %d\n", labels->arr[i].symbol_name, labels->arr[i].address);  } 
+    } 
+}
+
+    
+
+    
 
 
 
