@@ -8,6 +8,7 @@
 #include "first_pass.h"
 #include <stdlib.h>
 #include "main_struct.h"
+#include "sec_pass.h"
 #define ADDR_INVALID  (-1)
 #define ADDR_IMMEDIATE 0
 #define ADDR_DIRECT    1
@@ -1039,7 +1040,13 @@ int exe_first_pass(char *file_name){
     }
     fclose(fp);
     update_data_labels(&labels,IC);
+    if (!error_found) {
+        if (!exe_sec_pass(file_name,&labels,&code_img,&data_img,&externs,&entries,IC,DC)) {
+            error_found = 1;
+        }
+    }
     free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
+    return !error_found;
 
     return !error_found;
 }
