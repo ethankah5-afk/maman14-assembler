@@ -26,9 +26,24 @@ int exe_sec_pass() {
 }
 
 
+int resolve_one_word(CodeWord *word, LableTable *labels, NameRefTable *externs) { 
 
+Label *lbl;
+if(word->label == NULL) { 
+    return 1; } 
+    
+lbl = find_label_by_name(labels, word->label);
+    
+if (lbl ==NULL) {
+     return 0; } 
 
+if (is_extern_name(externs, word->label)) { 
+    word->value=1; }
 
+else { 
+    word->value = (lbl->address << 2) | 2; }
+    return 1:
+}
 
 
 Label *find_label_by_name(LableTable *labels, const char *name) {  
