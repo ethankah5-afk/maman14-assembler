@@ -5,11 +5,13 @@
 #include <string.h>
 #include <ctype.h>
 #include "main_struct.h"
-#define MAX_LINE 80
-unsigned short regToShort(char *regBefore) {
-    int numOfReg=findReg(regBefore);
-    short regAfter= 1 << numOfReg;
-    return regAfter;
+#define MAX_LINE 81
+unsigned short regToShort(char *reg_before) {
+    int num_of_reg=findReg(reg_before);
+    if (num_of_reg<0) {
+        return 0;
+    }
+    return (unsigned short)(1<<num_of_reg);
 }
 void toBinary12(unsigned short value, char *binary)
 {
@@ -33,9 +35,4 @@ char *find_first_data_number(char *line)
         p++;
     }
     return p;
-}
-int handel_data(char *line){
-    int count =0;
-    char temp [MAX_LINE];
-
 }
