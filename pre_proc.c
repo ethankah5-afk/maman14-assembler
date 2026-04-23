@@ -98,11 +98,11 @@ int is_macro_call(char *line, char *macro_name) {
 }
 int is_blank_or_comment(const char *line) {
     int i=0;
-    if (line[0]==';') {
-        return 1;
-    }
     while (line[i]==' '||line[i]=='\t') {
         i++;
+    }
+    if (line[0]==';') {
+        return 1;
     }
     if (line[i]=='\n'||line[i]=='\0') {
         return 1;
