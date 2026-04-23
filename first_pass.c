@@ -1047,6 +1047,4 @@ int exe_first_pass(char *file_name){
     }
     free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
     return !error_found;
-
-    return !error_found;
 }
