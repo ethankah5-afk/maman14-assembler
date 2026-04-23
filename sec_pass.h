@@ -4,15 +4,10 @@
 
 #ifndef ASSEMBLERPROJECT_SEC_PASS_H
 #define ASSEMBLERPROJECT_SEC_PASS_H
+#include "main_struct.h"
 
-Label *find_label_by_name(LableTable *labels, const char *name); 
-int is_extern_name(NameRefTable *externs, const char *name); 
-int resolve_one_code_word(CodeWord *word, LableTable *labels, NameRefTable *externs); 
-int resolve_code_labels(CodeIMage *code_img, LableTable *labels, NameRefTable *externs); 
-int mark_entry_labels(LableTable *labels, NameRefTable *entries); 
-int collect_entries_for_output(LableTable *labels, FILE *fp); 
-int write_ext_usages(FILE *fp, CodeImage* code_img, NameRefTable *externs,int start_address);
+int exe_sec_pass(char *file_name,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int IC,int DC);
+
+int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC,int DC);
+
 #endif //ASSEMBLERPROJECT_SEC_PASS_H
-
-
-
