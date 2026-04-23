@@ -1,23 +1,11 @@
-//
+
 // Created by ethan on 23/04/2026.
 //
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "first_pass.h"
-#include "first_pass.c"
-#include <stdlib.h>
-#include "main_struct.h"
-#include "sec_pass.h"
-//
-// Created by ethan on 23/04/2026.
-//
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include "first_pass.h"
-#include "first_pass.c"
-#include <stdlib.h>
 #include "main_struct.h"
 #include "sec_pass.h"
 
