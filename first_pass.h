@@ -12,7 +12,7 @@
 #include "main_struct.h"
 
 #define MAX_LINE_LENGTH 81
-
+int is_blank_or_comment(const char *line);
 int is_valid_number(const char *token, int *value);
 int is_valid_label(char *label_name, LabelTable *table);
 int is_label_operands(char *label_name);
