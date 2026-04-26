@@ -8,7 +8,6 @@
 #include "first_pass.h"
 #include "main_struct.h"
 #include "sec_pass.h"
-
 #define ARE_EXTERNAL 1
 #define ARE_RELOCATABLE 2
 
@@ -99,27 +98,32 @@ int write_ent_file(char *file_name,LabelTable *labels) {
         }
     }
     fclose(fp);
+    if(!found) {
+        remove(ent_name);
+    }
     return 1;
 }
-int write_ext_file(char *file_name, CodeImage *code_img, LabelTable *labels) {
+int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     int i;
+    int found=0;
     FILE *fp;
     char ext_name[256];
-    sprintf(ext_name, "%s.ext", file_name);
+    make_output_name(file_name,".ext",ext_name);
     fp = fopen(ext_name, "w");
     if (fp==NULL) {
         return 0;
     }
+    found=0;
     for (i=0; i<code_img->count;i++) {
-        CodeWord *word = &code_img->arr[i];
-        if(word->label !=NULL) {
-            Label *lbl = find_label_by_name(labels, word->label);
-            if (lbl!=NULL && lbl->is_extern) {
-                fprintf(fp,"%s %d\n", word->label, 100+i);
-            }
+        if (code_img->arr[i].label!=NULL&&is_extern_name(externs,code_img->arr[i].label)) {
+            fprintf(fp, "%s %d\n",code_img->arr[i].label,100+i);
+            found=1;
         }
     }
     fclose(fp);
+    if (!found) {
+        remove(ext_name);
+    }
     return 1;
 }
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC, int DC) {
@@ -131,7 +135,7 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
     if (fp==NULL) {
         return 0;
     }
-    fprintf(fp," %d  %d\n",IC,DC);
+    fprintf(fp," %d  %d\n",code_img->count,data_img->count);
     for (i=0;i<code_img->count;i++) {
         fprintf(fp,"%s\n",convert_word_to_output(code_img->arr[i].value));
     }
@@ -160,7 +164,7 @@ int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeIm
         if (!write_ob_file(file_name,code_img,data_img,IC,DC)) {
             error_found=1;
         }
-        if (!write_ext_file(file_name,code_img,labels)){
+        if (!write_ext_file(file_name,code_img,externs)){
             error_found=1;
         }
         if (!write_ent_file(file_name,labels)){
