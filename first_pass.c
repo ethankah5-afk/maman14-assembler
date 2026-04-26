@@ -43,14 +43,13 @@ int is_valid_label(char *label_name, LabelTable *table){
         }
     }
     /* if label name is taken */
-    if (table != NULL && findLabel(table, label_name) != -1) {
+    if (table != NULL && findLabel(table, label_name) == -1) {
         return 0;
     }
-
     if (findInstruction(label_name) != NULL) {
         return 0;
     }
-    if (findReg(label_name)!= -1) {
+    if (findReg(label_name)== -1) {
         return  0;
     }
     if (strcmp(label_name,".data")==0|| strcmp(label_name,".string")==0 || strcmp(label_name, ".extern")==0 || strcmp(label_name,".entry")==0) {
@@ -58,7 +57,6 @@ int is_valid_label(char *label_name, LabelTable *table){
     }
     return 1;
 }
-
 int is_label_operands(char *label_name){
     int i;
     if (label_name == NULL) {
@@ -202,7 +200,7 @@ int findLabel(LabelTable *table, char *name) {
 
 int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined) {
     Label *temp;
-    if (findLabel(table, name) != -1) {
+    if (findLabel(table, name) == -1) {
         return 0;
     }
     if (table->count == table->capacity) {
@@ -236,20 +234,20 @@ int add_code_word(CodeImage *img, unsigned short value, const char *label, int l
         }
         img->arr = temp;
     }
-
     img->arr[img->count].value = value;
     img->arr[img->count].assembly_line = line;
-
     if (label != NULL) {
         img->arr[img->count].label = (char *)malloc(strlen(label) + 1);
         if (img->arr[img->count].label == NULL) {
+            img->arr[img->count].value = 0;
+            img->arr[img->count].assembly_line = 0;
             return 0;
         }
         strcpy(img->arr[img->count].label, label);
-    } else {
+    }
+    else {
         img->arr[img->count].label = NULL;
     }
-
     img->count++;
     return 1;
 }
@@ -659,18 +657,23 @@ int handle_one_operand(char *op,
                        LabelTable *labels,
                        CodeImage *code_img,
                        int *IC) {
+    int operand_address;
     int type;
     int idx;
+    unsigned short value;
+    operand_address= *IC;
     type = get_addressing_type(op);
     if (type == ADDR_IMMEDIATE) {
-        if (!add_code_word(code_img, encode_immediate(op), NULL, line_num)) {
+        value=encode_immediate(op);
+        if (!add_code_word(code_img, value, NULL, line_num)) {
             return 0;
         }
         (*IC)++;
         return 1;
     }
     if (type == ADDR_REGISTER) {
-        if (!add_code_word(code_img, encode_register(op), NULL, line_num)) {
+        value=encode_register(op);
+        if (!add_code_word(code_img, value, NULL, line_num)) {
             return 0;
         }
         (*IC)++;
@@ -683,7 +686,7 @@ int handle_one_operand(char *op,
             labels->arr[idx].is_extern == 0) {
             if (!add_code_word(code_img,
                                (unsigned short)labels->arr[idx].address,
-                               NULL,
+                               op,
                                line_num)) {
                 return 0;
                                }
@@ -703,7 +706,7 @@ int handle_one_operand(char *op,
             labels->arr[idx].is_data == 0 &&
             labels->arr[idx].is_extern == 0) {
             if (!add_code_word(code_img,
-                               (unsigned short)(labels->arr[idx].address - (*IC)),
+                               (unsigned short)(labels->arr[idx].address - operand_address),
                                NULL,
                                line_num)) {
                 return 0;}
@@ -936,41 +939,29 @@ int detect_line_type(char *line) {
 int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name) {
     char temp[MAX_LINE_LENGTH];
     char *token;
-
     strcpy(temp,line);
     token = strtok(temp," \t\n");
-
     if (token == NULL) {
         return 0; }
-
     if (token[strlen(token) -1] == ':') {
         return 0; }
-
     if (strcmp(token, ".extern") !=0) {
         return 0; }
-
     token = strtok(NULL, " \t\n");
-    if (token ==NULL || !is_valid_label(token,NULL)) {
+    if (token ==NULL || !is_valid_label(token,labels)) {
         return 0; }
-
     strcpy(label_name, token);
-
     token = strtok(NULL, " \t\n");
     if (token!=NULL) {
         return 0; }
-
     if (!addLabel(labels, label_name, 0,0,line_num)) {
         return 0; }
-
     labels->arr[labels->count - 1].is_extern = 1;
-
     if (!add_name_ref(externs, label_name, line_num)) {
         return 0;
     }
-
     return 1;
 }
-
 
 int handle_first_pass_line(char *line,
                            int line_num,
