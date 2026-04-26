@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
 
         if (!run_preproc(as_file)) {
             printf("Preproc failed\n");
+            free(as_file);
             continue;
         }
         /* שלב 2: first pass */
