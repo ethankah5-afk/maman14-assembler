@@ -9,7 +9,7 @@
 
 Label *find_label_by_name(LabelTable *labels, const char *name);
 int is_extern_name(NameRefTable *externs, const char *name);
-int resolve_one_code_word(CodeWord *word, LabelTable *labels, NameRefTable *externs);
+int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs);
 int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *externs);
 int mark_entry_labels(LabelTable *labels, NameRefTable *entries);
 int exe_sec_pass(char *file_name,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int IC,int DC);
