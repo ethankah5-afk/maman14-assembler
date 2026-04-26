@@ -173,3 +173,67 @@ int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeIm
     }
     return !error_found;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void make_output_name(char *file_name, char *ext, char *out) { 
+
+char *dot; 
+strcpy(out,file_name); 
+    
+dot = strrchr(out,'.'); 
+
+    if (dot!= NULL) 
+        *dot = '\0'; 
+
+    strcat(out,ext); 
+}
+
+char *covert_word_to_output(unsigned short word) { 
+   
+return short_to_base64(word); 
+ 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
