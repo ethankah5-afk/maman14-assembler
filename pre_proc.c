@@ -96,19 +96,6 @@ int is_macro_call(char *line, char *macro_name) {
     }
     return 1;
 }
-int is_blank_or_comment(const char *line) {
-    int i=0;
-    while (line[i]==' '||line[i]=='\t') {
-        i++;
-    }
-    if (line[0]==';') {
-        return 1;
-    }
-    if (line[i]=='\n'||line[i]=='\0') {
-        return 1;
-    }
-    return 0;
-}
 int run_preproc(char *file_name) {
     FILE *fp_in, *fp_out;
     char line[MAX_LINE_LENGTH];
@@ -139,9 +126,6 @@ int run_preproc(char *file_name) {
     }
 
     while (fgets(line,MAX_LINE_LENGTH , fp_in)) {
-        if (is_blank_or_comment(line)) {
-            continue;
-        }
         line_count++;
         strcpy(line_copy, line);
         macro_status=is_macro(line_copy,&mcro_name);
