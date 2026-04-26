@@ -31,20 +31,31 @@ int is_extern_name(NameRefTable *externs, const char *name) {
     }
     return 0;
 }
-int resolve_one_code_word(CodeWord *word, LabelTable *labels, NameRefTable *externs) {
+int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs) {
     Label *lbl;
+    int current_address;
+
     if(word->label == NULL) {
         return 1;
     }
+    current_address=100+index;
+    if (word->label[0]=='%') {
+        lbl = find_label_by_name(labels, word->label+1);
+        if (lbl ==NULL||lbl->is_extern) {
+            return 0;
+        }
+        word->value=(unsigned short)(((lbl->address-current_address)<<2)|ARE_RELOCATABLE);
+        return 1;
+    }
     lbl = find_label_by_name(labels, word->label);
-    if (lbl ==NULL) {
+    if (lbl==NULL) {
         return 0;
     }
     if (is_extern_name(externs, word->label)) {
         word->value=ARE_EXTERNAL;
     }
     else {
-word->value = (lbl->address << 2) |ARE_RELOCATABLE;
+        word->value = (lbl->address << 2) |ARE_RELOCATABLE;
     }
     return 1;
 }
@@ -52,7 +63,7 @@ word->value = (lbl->address << 2) |ARE_RELOCATABLE;
 int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *externs) {
     int i;
     for(i=0; i<code_img->count; i++) {
-        if (!resolve_one_code_word(&code_img->arr[i],labels, externs)) {
+        if (!resolve_one_code_word(&code_img->arr[i],i,labels, externs)) {
             return 0;
         }
     }
