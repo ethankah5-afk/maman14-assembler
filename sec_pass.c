@@ -20,7 +20,21 @@ void make_output_name(char *file_name, char *ext, char *out) {
     strcat(out,ext);
 }
 char *covert_word_to_output(unsigned short word) {
-    return short_to_base64(word);
+
+ char hex_table[] = 0123456789ABCDEF";
+ char *res; 
+
+    res = (char *)malloc( 4 * sizeof(char));
+
+    if (res==NULL) {
+        return NULL; }
+
+    r[0] = hex_table[(num >> 8) & 0xF]; 
+    r[1] = hex_table[(num >> 4 & 0xF]; 
+    r[2] = hex_table[(num) & 0xF]; 
+    r[3] = '\0'; 
+
+        return res; 
 }
 
 Label *find_label_by_name(LabelTable *labels, const char *name) {
