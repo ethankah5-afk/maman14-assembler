@@ -8,8 +8,20 @@
 #include "first_pass.h"
 #include "main_struct.h"
 #include "sec_pass.h"
+#include "conversion.h"
 #define ARE_EXTERNAL 1
 #define ARE_RELOCATABLE 2
+void make_output_name(char *file_name, char *ext, char *out) {
+    char *dot;
+    strcpy(out,file_name);
+    dot = strrchr(out,'.');
+    if (dot!= NULL)
+        *dot = '\0';
+    strcat(out,ext);
+}
+char *covert_word_to_output(unsigned short word) {
+    return short_to_base64(word);
+}
 
 Label *find_label_by_name(LabelTable *labels, const char *name) {
     int i;
@@ -127,6 +139,14 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     return 1;
 }
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC, int DC) {
+    char *out_word;
+    out_word=convert_word_to_output(code_img->arr[IC].value);
+    if (out_word==NULL) {
+        fclose(fp);
+        return 0;
+    }
+    fprintf(fp,"%s\n",out_word);
+    free(out_word);
     FILE *fp;
     char ob_name[100];
     int i;
@@ -173,67 +193,3 @@ int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeIm
     }
     return !error_found;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void make_output_name(char *file_name, char *ext, char *out) { 
-
-char *dot; 
-strcpy(out,file_name); 
-    
-dot = strrchr(out,'.'); 
-
-    if (dot!= NULL) 
-        *dot = '\0'; 
-
-    strcat(out,ext); 
-}
-
-char *covert_word_to_output(unsigned short word) { 
-   
-return short_to_base64(word); 
- 
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
