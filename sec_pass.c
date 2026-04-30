@@ -139,32 +139,47 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     return 1;
 }
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC, int DC) {
-    char *out_word;
-    out_word=convert_word_to_output(code_img->arr[IC].value);
-    if (out_word==NULL) {
-        fclose(fp);
-        return 0;
-    }
-    fprintf(fp,"%s\n",out_word);
-    free(out_word);
+    
     FILE *fp;
     char ob_name[100];
     int i;
-    make_output_name(file_name,".ob",ob_name);
-    fp=fopen(ob_name,"w");
+    char *out_word;
+
+    
+   make_output_name(file_name,".ob",ob_name);
+    
+fp=fopen(ob_name,"w");
     if (fp==NULL) {
         return 0;
     }
-    fprintf(fp," %d  %d\n",code_img->count,data_img->count);
-    for (i=0;i<code_img->count;i++) {
-        fprintf(fp,"%s\n",convert_word_to_output(code_img->arr[i].value));
-    }
-    for (i=0;i<data_img->count;i++) {
-        fprintf(fp,"%s\n",convert_word_to_output(data_img->arr[i].value));
-    }
-    fclose(fp);
-    return 1;
-}
+
+fprintf(fp,"%d &d \n", IC -IC_INIT_VALUE, DC); 
+
+ for(i-0; i< code_img->count; i++) { 
+    outword = convert_word_to_output(code->arr[i].value); 
+
+        if(out_word == NULL) { 
+            fclose(fp); 
+            return 0; } 
+
+    fprintf(fp, "%s\n", out_word); 
+     free(out_word); } 
+
+
+for(i=0; i<data_img->count; i++) { 
+     out_word = convert_word_to_output(data_img->arr[i].value); 
+        
+   if(out_word == NULL) { 
+            fclose(fp); 
+            return 0; } 
+        
+ fprintf(fp, "%s\n", out_word); 
+ free(out_word); } 
+
+  fclose(fp); 
+  return 1; } 
+
+
 /*int collect_entries_output(LabelTable *labels, FILE *fp) {
     int i;
     for (i=0; i<labels->count; i++) {
