@@ -11,6 +11,7 @@
 #include "conversion.h"
 #define ARE_EXTERNAL 1
 #define ARE_RELOCATABLE 2
+#define IC_INIT_VALUE 100
 void make_output_name(char *file_name, char *ext, char *out) {
     char *dot;
     strcpy(out,file_name);
@@ -19,24 +20,38 @@ void make_output_name(char *file_name, char *ext, char *out) {
         *dot = '\0';
     strcat(out,ext);
 }
-char *covert_word_to_output(unsigned short word) {
-
- char hex_table[] = 0123456789ABCDEF";
- char *res; 
-
+int mark_entry_labels(LabelTable *labels, NameRefTable *entries) {
+    int i;
+    int error_found=0;
+    Label *lbl;
+    for(i=0; i<entries->count;i++) {
+        lbl = find_label_by_name(labels, entries->arr[i].name);
+        if(lbl ==NULL)
+            printf("Error: entry label '%s' was not defined\n", entries->arr[i].name);
+        error_found=1;
+        continue;
+        if(lbl->is_extern)
+            printf("Error: label '%s' cannot be both entry and extern\n", entries->arr[i].name);
+        error_found = 1;
+        continue;
+    }
+    lbl->is_entry = 1;
+    return !error_found;
+}
+char *convert_word_to_hex(unsigned short word) {
+ char hex_table[] = "0123456789ABCDEF";
+ char *res;
     res = (char *)malloc( 4 * sizeof(char));
-
     if (res==NULL) {
         return NULL; }
 
-    r[0] = hex_table[(num >> 8) & 0xF]; 
-    r[1] = hex_table[(num >> 4 & 0xF]; 
-    r[2] = hex_table[(num) & 0xF]; 
-    r[3] = '\0'; 
+    res[0] = hex_table[(word >> 8) & 0xF];
+    res[1] = hex_table[(word >> 4) & 0xF];
+    res[2] = hex_table[word & 0xF];
+    res[3] = '\0';
 
-        return res; 
+        return res;
 }
-
 Label *find_label_by_name(LabelTable *labels, const char *name) {
     int i;
     for (i=0; i< labels->count; i++) {
@@ -59,7 +74,6 @@ int is_extern_name(NameRefTable *externs, const char *name) {
 int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs) {
     Label *lbl;
     int current_address;
-
     if(word->label == NULL) {
         return 1;
     }
@@ -94,55 +108,28 @@ int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *e
     }
     return 1;
 }
-int mark_entry_labels(LabelTable *labels, NameRefTable *entries) {
-    int i;
-    int error_found=0; 
-    Label *lbl;
-    
-    for(i=0; i<entries->count;i++) {
-        lbl = find_label_by_name(labels, entries->arr[i].name);
-        
-        if(lbl ==NULL)
-            printf("Error: entry label '%s' was not defined\n, entries->arr[i].name); 
-            error_found=1; 
-            continue; 
-        
-        if(lbl->is_extern)
-            printf("Error: label '%s' cannot be both entry and extern\n", entries->arr[i].name); 
-            error_found = 1; 
-            continue; 
-    }
-    
-    lbl->is_entry = 1;
-    return !error_found;
-}
 int write_ent_file(char *file_name,LabelTable *labels) {
     int i;
     FILE *fp;
     char ent_name[256];
-
-    for(i=0; i<(labels->count);i++) { 
-    if(labels->arr[i].is_entry) { 
-        break;}
-    }} 
-
+    for(i=0; i<(labels->count);i++) {
+        if(labels->arr[i].is_entry) {
+            break;
+        }
+    }
     if (i==(labels->count)) {
-        return 1; } 
-
-    make_output_name(file_name,".ent", ent_name); 
-    fp = fopen(ent_name, "w");    
-    
-if (fp==NULL) {   
-    return 0; } 
-
-for (i=0; i<labels->count; i++) { 
-    
+        return 1;
+    }
+    make_output_name(file_name,".ent", ent_name);
+    fp = fopen(ent_name, "w");
+    if (fp==NULL) {
+        return 0;
+    }
     for (i=0; i<labels->count; i++) {
-        if (labels->(arr[i].is_entry)) {
+        if (labels->arr[i].is_entry) {
             fprintf(fp,"%s %d\n",labels->arr[i].symbol_name,labels->arr[i].address);
         }
     }
-    
     fclose(fp);
     return 1;
 }
@@ -170,46 +157,36 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     return 1;
 }
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC, int DC) {
-    
     FILE *fp;
     char ob_name[100];
     int i;
     char *out_word;
-
-    
-   make_output_name(file_name,".ob",ob_name);
-    
-fp=fopen(ob_name,"w");
+    make_output_name(file_name,".ob",ob_name);
+    fp=fopen(ob_name,"w");
     if (fp==NULL) {
         return 0;
     }
-
-fprintf(fp,"%d &d \n", IC -IC_INIT_VALUE, DC); 
-
- for(i-0; i< code_img->count; i++) { 
-    outword = convert_word_to_output(code->arr[i].value); 
-
-        if(out_word == NULL) { 
-            fclose(fp); 
-            return 0; } 
-
-    fprintf(fp, "%s\n", out_word); 
-     free(out_word); } 
-
-
-for(i=0; i<data_img->count; i++) { 
-     out_word = convert_word_to_output(data_img->arr[i].value); 
-        
-   if(out_word == NULL) { 
-            fclose(fp); 
-            return 0; } 
-        
- fprintf(fp, "%s\n", out_word); 
- free(out_word); } 
-
-  fclose(fp); 
-  return 1; } 
-
+    fprintf(fp,"%d %d \n", IC -IC_INIT_VALUE, DC);
+    for(i=0; i< code_img->count; i++) {
+        out_word = convert_word_to_hex(code_img->arr[i].value);
+        if(out_word == NULL) {
+            fclose(fp);
+            
+            return 0; 
+        }
+        fprintf(fp, "%04d %s\n",IC_INIT_VALUE+i, out_word);
+        free(out_word);
+    }
+    for(i=0; i<data_img->count; i++) {
+        out_word = convert_word_to_hex(data_img->arr[i].value);
+        if(out_word == NULL) {
+            fclose(fp);
+            return 0; }
+        fprintf(fp, "%04d %s\n",IC_INIT_VALUE+code_img->count+i, out_word);
+        free(out_word); }
+    fclose(fp);
+    return 1;
+}
 
 /*int collect_entries_output(LabelTable *labels, FILE *fp) {
     int i;
