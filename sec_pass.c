@@ -82,37 +82,54 @@ int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *e
 }
 int mark_entry_labels(LabelTable *labels, NameRefTable *entries) {
     int i;
+    int error_found=0; 
     Label *lbl;
+    
     for(i=0; i<entries->count;i++) {
         lbl = find_label_by_name(labels, entries->arr[i].name);
+        
         if(lbl ==NULL)
-            return 0;
+            printf("Error: entry label '%s' was not defined\n, entries->arr[i].name); 
+            error_found=1; 
+            continue; 
+        
         if(lbl->is_extern)
-            return 0;
-        lbl->is_entry = 1;
+            printf("Error: label '%s' cannot be both entry and extern\n", entries->arr[i].name); 
+            error_found = 1; 
+            continue; 
     }
-    return 1;
+    
+    lbl->is_entry = 1;
+    return !error_found;
 }
 int write_ent_file(char *file_name,LabelTable *labels) {
     int i;
-    int found=0;
     FILE *fp;
     char ent_name[256];
-    sprintf(ent_name,"%s.ent",file_name);
-    fp=fopen(ent_name,"w");
-    if (fp==NULL) {
-        return 0;
-    }
+
+    for(i=0; i<(labels->count);i++) { 
+    if(labels->arr[i].is_entry) { 
+        break;}
+    }} 
+
+    if (i==(labels->count)) {
+        return 1; } 
+
+    make_output_name(file_name,".ent", ent_name); 
+    fp = fopen(ent_name, "w");    
+    
+if (fp==NULL) {   
+    return 0; } 
+
+for (i=0; i<labels->count; i++) { 
+    
     for (i=0; i<labels->count; i++) {
-        if (labels->arr[i].is_entry) {
+        if (labels->(arr[i].is_entry)) {
             fprintf(fp,"%s %d\n",labels->arr[i].symbol_name,labels->arr[i].address);
-            found=1;
         }
     }
+    
     fclose(fp);
-    if(!found) {
-        remove(ent_name);
-    }
     return 1;
 }
 int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
