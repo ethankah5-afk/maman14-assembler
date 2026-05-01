@@ -46,5 +46,4 @@ int is_one_of(int type, int a, int b, int c, int d);
 int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count);
 int detect_line_type(char *line);
 int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name);
-
 #endif //ASSEMBLERPROJECT_FIRST_PASS_H
