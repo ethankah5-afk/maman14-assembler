@@ -51,7 +51,22 @@ int is_macro(char *line_num,char **mcro_name) {
     extra = strtok(NULL," \t\n");
     if (extra != NULL) return -1;
     return 1;
+
 }
+
+int find_macro(macro_node *table, int table_size, char *name) { 
+
+int i; 
+
+    if(table ==NULL || name == NULL) { 
+        return 1; } 
+
+    for (i =0; i<table_size;i++) { 
+        if(strcmp(table[i].name, name) == 0) {
+            return 1; } 
+    }
+    return -1;
+    }
 
 char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
     int mcro_length=0;
