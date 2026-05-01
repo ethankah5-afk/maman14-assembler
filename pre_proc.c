@@ -77,7 +77,6 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
     }
     return mcro;
 }
-
 int is_macro_call(char *line, char *macro_name) {
     char copy[MAX_LINE_LENGTH];
     char *token;
