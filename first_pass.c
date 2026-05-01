@@ -197,7 +197,7 @@ int initLabelTable(LabelTable *table) {
     return 1;
 }
 
-int findLabel(LabelTable *table, char *name) {
+int findLabel(LabelTable *table,char *name) {
     int i;
     if (table==NULL||name==NULL) {
         return -1;
@@ -1006,7 +1006,7 @@ int handle_first_pass_line(char *line,
             return 0;
     }
 }
-//int is_blank_or_comment(char *line);
+//int is_blank_or_commet(char *line);
 //int is_valid_label(char *line);
 int exe_first_pass(char *file_name){
     FILE *fp;
