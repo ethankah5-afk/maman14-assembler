@@ -6,7 +6,6 @@
 #include <ctype.h>
 #include "main_struct.h"
 #include "conversion.h"
-
 #define MAX_LINE 81
 unsigned short regToShort(char *reg_before) {
     int num_of_reg=findReg(reg_before);
