@@ -26,25 +26,22 @@ int mark_entry_labels(LabelTable *labels, NameRefTable *entries) {
     Label *lbl;
     for(i=0; i<entries->count;i++) {
         lbl = find_label_by_name(labels, entries->arr[i].name);
-        if(lbl ==NULL)
+        if(lbl ==NULL) {
             printf("Error: entry label '%s' was not defined\n", entries->arr[i].name);
-        error_found=1;
-        continue;
-        if(lbl->is_extern)
+            error_found=1;
+            continue;
+        }
+        if(lbl->is_extern) {
             printf("Error: label '%s' cannot be both entry and extern\n", entries->arr[i].name);
-        error_found = 1;
-        continue;
+            error_found = 1;
+            continue;
+        }
+        lbl->is_entry = 1;
     }
-    lbl->is_entry = 1;
     return !error_found;
 }
-char *convert_word_to_hex(unsigned short word) {
+char *convert_word_to_hex(unsigned short word,char res[4]) {
  char hex_table[] = "0123456789ABCDEF";
- char *res;
-    res = (char *)malloc( 4 * sizeof(char));
-    if (res==NULL) {
-        return NULL; }
-
     res[0] = hex_table[(word >> 8) & 0xF];
     res[1] = hex_table[(word >> 4) & 0xF];
     res[2] = hex_table[word & 0xF];
@@ -160,7 +157,7 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
     FILE *fp;
     char ob_name[100];
     int i;
-    char *out_word;
+    char out_word[4];
     make_output_name(file_name,".ob",ob_name);
     fp=fopen(ob_name,"w");
     if (fp==NULL) {
@@ -168,22 +165,13 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
     }
     fprintf(fp,"%d %d \n", IC -IC_INIT_VALUE, DC);
     for(i=0; i< code_img->count; i++) {
-        out_word = convert_word_to_hex(code_img->arr[i].value);
-        if(out_word == NULL) {
-            fclose(fp);
-            
-            return 0; 
-        }
+        convert_word_to_hex(code_img->arr[i].value,out_word);
         fprintf(fp, "%04d %s\n",IC_INIT_VALUE+i, out_word);
-        free(out_word);
     }
     for(i=0; i<data_img->count; i++) {
-        out_word = convert_word_to_hex(data_img->arr[i].value);
-        if(out_word == NULL) {
-            fclose(fp);
-            return 0; }
+        convert_word_to_hex(data_img->arr[i].value,out_word);
         fprintf(fp, "%04d %s\n",IC_INIT_VALUE+code_img->count+i, out_word);
-        free(out_word); }
+    }
     fclose(fp);
     return 1;
 }
