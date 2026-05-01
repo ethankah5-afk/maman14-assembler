@@ -7,9 +7,8 @@
 #include <string.h>
 #include "main_struct.h"
 #include <stdio.h>
-
 void make_output_name(char *file_name,char *ext, char *out);
-char *convert_word_to_output(unsigned short word);
+char *convert_word_to_hex(unsigned short word,char res[4]);
 Label *find_label_by_name(LabelTable *labels, const char *name);
 int is_extern_name(NameRefTable *externs, const char *name);
 int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs);
