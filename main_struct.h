@@ -3,6 +3,7 @@
 //
 #ifndef ASSEMBLERPROJECT_MAIN_STRUCT_H
 #define ASSEMBLERPROJECT_MAIN_STRUCT_H
+
 int findReg(char *str);
 typedef struct Instruction{
     char *name;
