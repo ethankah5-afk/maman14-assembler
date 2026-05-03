@@ -8,7 +8,7 @@
 #include "pre_proc.h"
 #define MAX_LINE_LENGTH 81
 
-static void free_macro_table(macro_node *table, int table_size) {
+void free_macro_table(macro_node *table, int table_size) {
     int i;
     for (i = 0; i < table_size; i++) {
         free(table[i].name);
@@ -51,22 +51,7 @@ int is_macro(char *line_num,char **mcro_name) {
     extra = strtok(NULL," \t\n");
     if (extra != NULL) return -1;
     return 1;
-
 }
-
-int find_macro(macro_node *table, int table_size, char *name) { 
-
-int i; 
-
-    if(table ==NULL || name == NULL) { 
-        return 1; } 
-
-    for (i =0; i<table_size;i++) { 
-        if(strcmp(table[i].name, name) == 0) {
-            return 1; } 
-    }
-    return -1;
-    }
 
 char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
     int mcro_length=0;
@@ -110,7 +95,19 @@ int is_macro_call(char *line, char *macro_name) {
     }
     return 1;
 }
-int run_preproc(char *file_name) {
+int find_macro(macro_node *table, int table_size, char *name) {
+    int i;
+    if(table ==NULL || name == NULL) {
+        return 1;
+    }
+    for (i =0; i<table_size;i++) {
+        if(strcmp(table[i].name, name) == 0) {
+            return 1;
+        }
+    }
+    return -1;
+}
+int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
     FILE *fp_in, *fp_out;
     char line[MAX_LINE_LENGTH];
     char line_copy[MAX_LINE_LENGTH];
@@ -214,9 +211,10 @@ int run_preproc(char *file_name) {
     }
 
     /* ניקוי */
+    *macro_table=table;
+    *macro_count=table_size;
     fclose(fp_in);
     fclose(fp_out);
-    free_macro_table(table,table_size);
     free(am_file);
     return 1;
 }
