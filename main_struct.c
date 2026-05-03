@@ -43,7 +43,6 @@ int findReg(char *str) {
     if (str == NULL) {
         return -1;
     }
-
     /* Iterate through the list of known registers and compare the string with each register in the list */
     for (i = 0; i < REG_COUNT; i++) {
         if (strcmp(str, REGS[i]) == 0) {
