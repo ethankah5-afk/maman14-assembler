@@ -61,7 +61,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
         return NULL;
     }
     str[0]='\0';
-    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
+    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strcmp(str,"mcroend\n")!=0) {
         mcro_length+=(int)strlen(str);
         (*line_count)++;
     }
@@ -72,7 +72,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count) {
         return NULL;
     }
     mcro[0]= '\0';
-    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strcmp(str,"endmcro\n")!=0) {
+    while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strncmp(str,"mcroend",7)!=0) {
         strcat(mcro,str);
     }
     return mcro;
@@ -98,7 +98,7 @@ int is_macro_call(char *line, char *macro_name) {
 int find_macro(macro_node *table, int table_size, char *name) {
     int i;
     if(table ==NULL || name == NULL) {
-        return 1;
+        return -1;
     }
     for (i =0; i<table_size;i++) {
         if(strcmp(table[i].name, name) == 0) {
