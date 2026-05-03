@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "main_struct.h"
 #include "sec_pass.h"
+#include "pre_proc.h"
 #define ADDR_INVALID  (-1)
 #define ADDR_IMMEDIATE 0
 #define ADDR_DIRECT    1
@@ -35,7 +36,7 @@ int is_blank_or_comment(const char *line) {
     }
     return 0;
 }
-int is_valid_label(char *label_name, LabelTable *table){
+int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,int macro_count){
     int i;
     if (label_name == NULL) {
         return 0;
@@ -58,10 +59,13 @@ int is_valid_label(char *label_name, LabelTable *table){
     if (table != NULL && findLabel(table, label_name) != -1) {
         return 0;
     }
+    if (find_macro(macro_table, macro_count, label_name) != -1) {
+        return 0;
+    }
     if (findInstruction(label_name) != NULL) {
         return 0;
     }
-    if (findReg(label_name)== -1) {
+    if (findReg(label_name)!= -1) {
         return  0;
     }
     if (strcmp(label_name,".data")==0|| strcmp(label_name,".string")==0 || strcmp(label_name, ".extern")==0 || strcmp(label_name,".entry")==0) {
@@ -340,7 +344,7 @@ void free_label_table(LabelTable *table) {
     table->count = 0;
     table->capacity = 0;
 }
-int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
+int handle_entry_line(char *line, int line_num, NameRefTable *entries,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp, line);
@@ -369,7 +373,7 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     }
     return 1;
 }
-int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table) {
+int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
@@ -383,7 +387,7 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     }
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
-        if (!is_valid_label(token,table)) {
+        if (!is_valid_label(token,table,macro_table,macro_count)) {
             return 0;
         }
         strcpy(label_name, token);
@@ -434,7 +438,7 @@ int is_valid_number(const char *token, int *value) {
     *value= (int)num;
     return 1;
 }
-int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table) {
+int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
@@ -451,7 +455,7 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     /* אם יש label בתחילת השורה */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
-        if (!is_valid_label(token,table)) {
+        if (!is_valid_label(token,table,macro_table,macro_count)) {
             return 0;
         }
         strcpy(label_name, token);
@@ -787,7 +791,7 @@ int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_c
             return 0;
     }
 }
-int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC){
+int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count){
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
@@ -815,7 +819,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     /* אם יש label בתחילת שורה */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
-        if (!is_valid_label(token,labels)) {
+        if (!is_valid_label(token,labels,macro_table,macro_count)) {
             return 0;
         }
         strcpy(label_name, token);
@@ -948,7 +952,7 @@ int detect_line_type(char *line) {
     return LINE_ERROR;
 }
 
-int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name) {
+int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp,line);
@@ -960,7 +964,7 @@ int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTabl
     if (strcmp(token, ".extern") !=0) {
         return 0; }
     token = strtok(NULL, " \t\n");
-    if (token ==NULL || !is_valid_label(token,labels)) {
+    if (token ==NULL || !is_valid_label(token,labels,macro_table,macro_count)) {
         return 0; }
     strcpy(label_name, token);
     token = strtok(NULL, " \t\n");
@@ -983,24 +987,23 @@ int handle_first_pass_line(char *line,
                            NameRefTable *externs,
                            NameRefTable *entries,
                            int *IC,
-                           int *DC) {
+                           int *DC,macro_node *macro_table,int macro_count) {
     int line_type;
     char extern_label[31];
     line_type=detect_line_type(line);
-
     switch(line_type) {
         case LINE_EMPTY:
             return 1;
         case LINE_ENTRY:
-            return handle_entry_line(line,line_num,entries);
+            return handle_entry_line(line,line_num,entries,macro_table,macro_count);
         case LINE_EXTERN:
-            return handle_extern_line(line,line_num,labels,externs,extern_label);
+            return handle_extern_line(line,line_num,labels,externs,extern_label,macro_table,macro_count);
         case LINE_DATA:
-            return handle_data_line(line,line_num,labels,data_img,DC,labels);
+            return handle_data_line(line,line_num,labels,data_img,DC,labels,macro_table,macro_count);
         case LINE_STRING:
-            return handle_string_line(line,line_num,labels,data_img,DC,labels);
+            return handle_string_line(line,line_num,labels,data_img,DC,labels,macro_table,macro_count);
         case LINE_INSTRUCTION:
-            return handle_instruction_line(line,line_num,labels,code_img,IC);
+            return handle_instruction_line(line,line_num,labels,code_img,IC,macro_table,macro_count);
         case LINE_ERROR:
         default:
             return 0;
@@ -1008,7 +1011,7 @@ int handle_first_pass_line(char *line,
 }
 //int is_blank_or_commet(char *line);
 //int is_valid_label(char *line);
-int exe_first_pass(char *file_name){
+int exe_first_pass(char *file_name,macro_node *macro_table,int macro_count){
     FILE *fp;
     char line[MAX_LINE_LENGTH];
     int line_num;
@@ -1040,7 +1043,7 @@ int exe_first_pass(char *file_name){
             continue;
         }
         if (!handle_first_pass_line(line, line_num, &labels, &code_img, &data_img,
-                                    &externs, &entries, &IC, &DC)) {
+                                    &externs, &entries, &IC, &DC,macro_table,macro_count)) {
             error_found = 1;
                                     }
     }
