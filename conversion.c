@@ -14,8 +14,7 @@ unsigned short regToShort(char *reg_before) {
     }
     return (unsigned short)(1<<num_of_reg);
 }
-void toBinary12(unsigned short value, char *binary)
-{
+void toBinary12(unsigned short value, char *binary){
     int i;
     unsigned short mask = 1 << 11;
     for (i = 0; i < 12; i++) {
@@ -25,8 +24,7 @@ void toBinary12(unsigned short value, char *binary)
     binary[12] = '\0';
 }
 
-char *find_first_data_number(char *line)
-{
+char *find_first_data_number(char *line){
     char *p = strstr(line, ".data");
     if (p == NULL) {
         return NULL;
