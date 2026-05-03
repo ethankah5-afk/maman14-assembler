@@ -344,7 +344,7 @@ void free_label_table(LabelTable *table) {
     table->count = 0;
     table->capacity = 0;
 }
-int handle_entry_line(char *line, int line_num, NameRefTable *entries,macro_node *macro_table,int macro_count) {
+int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     char temp[MAX_LINE_LENGTH];
     char *token;
     strcpy(temp, line);
@@ -795,7 +795,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
-    char *operands_line;;
+    char *operands_line;
     char op1[MAX_LINE_LENGTH];
     char op2[MAX_LINE_LENGTH];
     int has_label;
@@ -804,14 +804,11 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     int dest_type;
     Instruction *inst;
     unsigned short first_word;
-
     has_label =0;
     op_count =0;
     src_type=0;
     dest_type=0;
-
     strcpy(temp,line);
-
     token=strtok(temp," \t\n");
     if (token == NULL) {
         return 0;
@@ -995,7 +992,7 @@ int handle_first_pass_line(char *line,
         case LINE_EMPTY:
             return 1;
         case LINE_ENTRY:
-            return handle_entry_line(line,line_num,entries,macro_table,macro_count);
+            return handle_entry_line(line,line_num,entries);
         case LINE_EXTERN:
             return handle_extern_line(line,line_num,labels,externs,extern_label,macro_table,macro_count);
         case LINE_DATA:
@@ -1044,6 +1041,7 @@ int exe_first_pass(char *file_name,macro_node *macro_table,int macro_count){
         }
         if (!handle_first_pass_line(line, line_num, &labels, &code_img, &data_img,
                                     &externs, &entries, &IC, &DC,macro_table,macro_count)) {
+            printf("First pass error in line %d: %s", line_num, line);
             error_found = 1;
                                     }
     }
