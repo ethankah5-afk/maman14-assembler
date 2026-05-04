@@ -103,94 +103,6 @@ int is_label_operands(char *label_name){
     }
     return 1;
 }
-/*int is_label(char *line_of_file,char *label_name,LabelTable *table) {
-    char temp[MAX_LINE_LENGTH];
-    char *token;
-    strcpy(temp,line_of_file);
-    token= strtok(temp," \t\n");
-    if (token!=NULL&&token[strlen(token) - 1] == ':') {
-        token[strlen(token) - 1]='\0';
-        if (!is_valid_label(token,table)) {
-            return 0;
-        }
-        strcpy(label_name,token);
-        return 1;
-    }
-    return 0;
-}*/
-
-/*int is_data(char *line) {
-    char temp[MAX_LINE_LENGTH];
-    char *token;
-    strcpy(temp, line);
-    token = strtok(temp, " \t\n");
-    if (token == NULL) return 0;
-    if (token[strlen(token) - 1] == ':') {
-        token = strtok(NULL, " \t\n");
-        if (token == NULL) return 0;
-    }
-    return strcmp(token, ".data") == 0;
-}
-int is_string(char *line) {
-    char temp[MAX_LINE_LENGTH];
-    char *token;
-    strcpy(temp, line);
-    token = strtok(temp, " \t\n");
-    if (token == NULL) return 0;
-    if (token[strlen(token) - 1] == ':') {
-        token = strtok(NULL, " \t\n");
-        if (token == NULL) return 0;
-    }
-    return strcmp(token, ".string") == 0;
-}
-int is_entry(char *line) {
-    char temp[MAX_LINE_LENGTH];
-    char *token;
-
-    strcpy(temp, line);
-    token = strtok(temp, " \t\n");
-    if (token == NULL) return 0;
-
-    if (token[strlen(token) - 1] == ':') {
-        token = strtok(NULL, " \t\n");
-        if (token == NULL) return 0;
-    }
-
-    if (strcmp(token, ".entry") != 0) return 0;
-
-    token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_valid_label(token,NULL)) return 0;
-
-    token = strtok(NULL, " \t\n");
-    if (token != NULL) return 0;
-
-    return 1;
-}
-int is_extern(char *line, char *label_name) {
-    char temp[MAX_LINE_LENGTH];
-    char *token;
-
-    strcpy(temp, line);
-    token = strtok(temp, " \t\n");
-    if (token == NULL) return 0;
-
-    if (token[strlen(token) - 1] == ':') {
-        token = strtok(NULL, " \t\n");
-        if (token == NULL) return 0;
-    }
-
-    if (strcmp(token, ".extern") != 0) return 0;
-
-    token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_valid_label(token,NULL)) return 0;
-
-    strcpy(label_name, token);
-
-    token = strtok(NULL, " \t\n");
-    if (token != NULL) return 0;
-
-    return 1;
-}*/
 int initLabelTable(LabelTable *table) {
     table->count = 0;
     table->capacity = 10;
@@ -1025,15 +937,16 @@ int exe_first_pass(char *file_name,macro_node *macro_table,int macro_count){
     error_found = 0;
 
     if (!init_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries)) {
+        printf("FAILED: init_first_pass_memory\n");
         return 0;
     }
 
     fp = fopen(file_name, "r");
     if (fp == NULL) {
+        printf("FAILED: cannot open AM file: %s\n", file_name);
         free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
         return 0;
     }
-
     while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
         line_num++;
         if (is_blank_or_comment(line)) {
@@ -1048,7 +961,9 @@ int exe_first_pass(char *file_name,macro_node *macro_table,int macro_count){
     fclose(fp);
     update_data_labels(&labels,IC);
     if (!error_found) {
+        printf("FIRST PASS REALLY PASSED. IC=%d DC=%d\n", IC, DC);
         if (!exe_sec_pass(file_name,&labels,&code_img,&data_img,&externs,&entries,IC,DC)) {
+            printf("Second pass failed\n");
             error_found = 1;
         }
     }
