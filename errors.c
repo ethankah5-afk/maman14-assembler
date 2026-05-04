@@ -45,7 +45,7 @@ Error errors[] = {
         {ERROR_33, "Illegal argument"},
         {ERROR_34, "Missing argument"},
         {ERROR_35, "Missing comma between argument in a command line with two arguments"},
-        {ERROR_36, "Label not defined in the assembly file"},
+        {ERROR_36, "The label is used in the code, but it was never defined"},
         {ERROR_37, "Illegal label after .entry"},
         {ERROR_38, "Illegal comma near opcode"},
         {ERROR_39, "More commas than needed"},
@@ -65,7 +65,7 @@ Error errors[] = {
         {ERROR_53, "Extra text after the string end in '.string' line"},
         {ERROR_54, "IC too big for word CPU word length"},
         {ERROR_55, "Label definition is written more than once"},
-        {ERROR_56, "Label defined as .extern and defined in file"},
+        {ERROR_56, "Label defined as .extern and .entry"},
         {ERROR_57, "Input number in .data line is out of range"},
         {ERROR_58, "Illegal data line directive"},
         {ERROR_59, "Instruction '.data' line contains illegal chars or syntax error"}
