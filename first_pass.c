@@ -10,6 +10,7 @@
 #include "main_struct.h"
 #include "sec_pass.h"
 #include "pre_proc.h"
+#include "errors.h"
 #define ADDR_INVALID  (-1)
 #define ADDR_IMMEDIATE 0
 #define ADDR_DIRECT    1
@@ -256,9 +257,12 @@ void free_label_table(LabelTable *table) {
     table->count = 0;
     table->capacity = 0;
 }
-int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
+int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *entries) {
     char temp[MAX_LINE_LENGTH];
     char *token;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     strcpy(temp, line);
     token = strtok(temp, " \t\n");
     if (token == NULL) {
@@ -267,6 +271,7 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     if (token[strlen(token) - 1] == ':') {
         token = strtok(NULL, " \t\n");
         if (token == NULL) {
+            print_external_error(ERROR_37, loc);
             return 0;
         }
     }
@@ -274,12 +279,12 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
         return 0;
     }
     token = strtok(NULL, " \t\n");
-    
-    if (token == NULL) { 
-          print_external_error(ERROR_37, loc);
-            return 0; 
+
+    if (token == NULL) {
+        print_external_error(ERROR_37, loc);
+        return 0;
     }
-        
+
     if(!is_label_operands(token)) {
         print_external_error(ERROR_37, loc);
         return 0;
@@ -290,16 +295,21 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
     }
     if (!add_name_ref(entries, token, line_num)) {
         print_internal_error(ERROR_1);
-        return 0;
+        return -1;
     }
     return 1;
 }
-int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
+int handle_data_line(char *line, int line_num,char *file_name, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
+    char *operands;
+    int status;
     int has_label;
-    int num;
+    ERROR_CODES error_code;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     strcpy(temp, line);
     has_label = 0;
     token = strtok(temp, " \t\n");
@@ -309,7 +319,7 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,table,macro_table,macro_count)) {
-             print_external_error(ERROR_44, loc);
+            print_external_error(ERROR_44, loc);
             return 0;
         }
         strcpy(label_name, token);
@@ -321,45 +331,98 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
         }
     }
     if (strcmp(token, ".data") != 0) {
-         print_external_error(ERROR_58, loc);
+        print_external_error(ERROR_58, loc);
         return 0;
     }
     if (has_label) {
 
         if (findLabel(labels, label_name) != -1) {
-    print_external_error(ERROR_55, loc);
-    return 0;
-}
-        if (findLabel(labels, label_name) != -1) {
-    print_external_error(ERROR_55, loc);
-    return 0;
-}
-        
-        if (!addLabel(labels, label_name, *DC, 1, line_num)) {
-               print_internal_error(ERROR_1);
+            print_external_error(ERROR_55, loc);
             return 0;
         }
+        if (!addLabel(labels, label_name, *DC, 1, line_num)) {
+            print_internal_error(ERROR_1);
+            return -1;
+        }
     }
-    token = strtok(NULL, ", \t\n");
-    if (token == NULL) {
-        print_external_error(ERROR_59, loc);
+    operands=strstr(line,".data");
+    if (operands == NULL) {
+        print_external_error(ERROR_58,loc);
         return 0;
     }
-    while (token != NULL) {
-        if (!is_valid_number(token,&num)){
-            print_external_error(ERROR_50, loc);
-            return 0;
-        }
-        if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
-            print_internal_error(ERROR_1);
-            return 0;
-        }
-        (*DC)++;
-        token = strtok(NULL, ", \t\n");
+    operands+=5;
+    status=parse_data_values(operands,data_img,line_num,DC,&error_code);
+    if (status==-1) {
+        print_internal_error(error_code);
+        return -1;
+    }
+    if (status==0) {
+        print_external_error(error_code,loc);
+        return 0;
     }
     return 1;
 }
-
+int parse_data_values(char *args, CodeImage *data_img, int line_num, int *DC, ERROR_CODES *error_code){
+    char *p;
+    char *endptr;
+    long num;
+    p = args;
+    while (*p == ' ' || *p == '\t') {
+        p++;
+    }
+    if (*p == '\0' || *p == '\n') {
+        *error_code = ERROR_49; /* no .data arguments */
+        return 0;
+    }
+    while (*p != '\0' && *p != '\n') {
+        while (*p == ' ' || *p == '\t') {
+            p++;
+        }
+        if (*p == ',') {
+            *error_code = ERROR_39; /* too many commas / comma in wrong place */
+            return 0;
+        }
+        num = strtol(p, &endptr, 10);
+        if (p == endptr) {
+            *error_code = ERROR_50; /* not a number */
+            return 0;
+        }
+        if (num < -2048 || num > 2047) {
+            *error_code = ERROR_57; /* out of range */
+            return 0;
+        }
+        while (*endptr == ' ' || *endptr == '\t') {
+            endptr++;
+        }
+        if (*endptr == '\0' || *endptr == '\n') {
+            if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
+                *error_code = ERROR_1;
+                return -1;
+            }
+            (*DC)++;
+            return 1;
+        }
+        if (*endptr != ',') {
+            *error_code = ERROR_43;
+            return 0;
+        }
+        endptr++;
+        while (*endptr == ' ' || *endptr == '\t') {
+            endptr++;
+        }
+        if (*endptr == '\0' || *endptr == '\n') {
+            *error_code = ERROR_51;
+            return 0;
+        }
+        if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
+            *error_code = ERROR_1;
+            return -1;
+        }
+        (*DC)++;
+        p = endptr;
+    }
+    return 1;
+}
 int is_valid_number(const char *token, int *value) {
     char *endptr;
     long num;
@@ -376,7 +439,7 @@ int is_valid_number(const char *token, int *value) {
     *value= (int)num;
     return 1;
 }
-int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
+int handle_string_line(char *line, int line_num,char *file_name, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
     char *token;
@@ -384,6 +447,9 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     char *end_quote;
     int has_label;
     int i;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     strcpy(temp, line);
     has_label = 0;
     token = strtok(temp, " \t\n");
@@ -416,10 +482,10 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     print_external_error(ERROR_55, loc);
     return 0;
 }
-        
+
     if (!addLabel(labels, label_name, *DC, 1, line_num)) {
             print_internal_error(ERROR_1);
-            return 0;
+            return -1;
         }
     }
     start_quote = strchr(line, '"');
@@ -448,13 +514,13 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     for (i = 0; start_quote + i < end_quote; i++) {
         if (!add_code_word(data_img, (unsigned short)start_quote[i], NULL, line_num)) {
              print_internal_error(ERROR_1);
-            return 0;
+            return -1;
         }
         (*DC)++;
     }
     if (!add_code_word(data_img, (unsigned short)'\0', NULL, line_num)) {
          print_internal_error(ERROR_1);
-        return 0;
+        return -1;
     }
     (*DC)++;
     return 1;
@@ -620,21 +686,21 @@ void trim_spaces(char *str) {
         end--;
     }
 }
-int handle_one_operand(char *op,
-                       int line_num,
-                       LabelTable *labels,
-                       CodeImage *code_img,
-                       int *IC) {
+int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC) {
     int operand_address;
     int type;
     int idx;
     unsigned short value;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     operand_address= *IC;
     type = get_addressing_type(op);
     if (type == ADDR_IMMEDIATE) {
         value=encode_immediate(op);
         if (!add_code_word(code_img, value, NULL, line_num)) {
-            return 0;
+            print_internal_error(ERROR_1);
+            return -1;
         }
         (*IC)++;
         return 1;
@@ -642,7 +708,8 @@ int handle_one_operand(char *op,
     if (type == ADDR_REGISTER) {
         value=encode_register(op);
         if (!add_code_word(code_img, value, NULL, line_num)) {
-            return 0;
+            print_internal_error(ERROR_1);
+            return -1;
         }
         (*IC)++;
         return 1;
@@ -656,11 +723,13 @@ int handle_one_operand(char *op,
                                (unsigned short)labels->arr[idx].address,
                                op,
                                line_num)) {
-                return 0;
+                print_internal_error(ERROR_1);
+                return -1;
                                }
             } else {
                 if (!add_code_word(code_img, 0, op, line_num)) {
-                    return 0;
+                    print_internal_error(ERROR_1);
+                    return -1;
                 }
             }
         (*IC)++;
@@ -677,15 +746,18 @@ int handle_one_operand(char *op,
                                (unsigned short)(labels->arr[idx].address - operand_address),
                                NULL,
                                line_num)) {
-                return 0;}
+                print_internal_error(ERROR_1);
+                return -1;}
             } else {
                 if (!add_code_word(code_img, 0, op, line_num)) {
-                    return 0;
+                    print_internal_error(ERROR_1);
+                    return -1;
                 }
             }
         (*IC)++;
         return 1;
     }
+    print_external_error(ERROR_33, loc);
     return 0;
 }
 int is_one_of(int type, int a, int b, int c, int d) {
@@ -743,7 +815,7 @@ int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_c
             return 0;
     }
 }
-int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count){
+int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count){
     char temp[MAX_LINE_LENGTH];
     char *token;
     char label_name[31];
@@ -756,6 +828,10 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     int dest_type;
     Instruction *inst;
     unsigned short first_word;
+    int status;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     has_label =0;
     op_count =0;
     src_type=0;
@@ -785,15 +861,15 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
           print_external_error(ERROR_31, loc);
         return 0;
     }
-    
-    if (findLabel(labels, label_name) != -1) {
-    print_external_error(ERROR_55, loc);
-    return 0;
-}
+
+    if (has_label && findLabel(labels, label_name) != -1) {
+        print_external_error(ERROR_55, loc);
+        return 0;
+    }
     if (has_label){
         if (!addLabel(labels,label_name,*IC,0,line_num)) {
             print_internal_error(ERROR_1);
-            return 0;
+            return -1;
         }
     }
     operands_line = strtok(NULL, "\n");
@@ -807,6 +883,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
             return 0;
         }
         if (operands_line[0] == ',') {
+            print_external_error(ERROR_40, loc);
             return 0;
         }
         if (operands_line[strlen(operands_line) - 1] == ',') {
@@ -857,7 +934,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     first_word=build_first_word(inst,op1,op2,op_count);
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         print_internal_error(ERROR_1);
-        return 0;
+        return -1;
     }
     (*IC)++;
 
@@ -865,15 +942,22 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         return 1;
     }
     if (op_count==1) {
-        return handle_one_operand(op1,line_num,labels,code_img,IC);
+        return handle_one_operand(op1,line_num,file_name,labels,code_img,IC);
     }
 
     if(op_count==2) {
-        if (!handle_one_operand(op1,line_num,labels,code_img,IC)) {
-    
+        status=handle_one_operand(op1,line_num,file_name,labels,code_img,IC);
+        if (status==-1) {
+            return -1;
+        }
+        if (status==0) {
             return 0;
         }
-        if (!handle_one_operand(op2,line_num,labels,code_img,IC)) {
+        status=handle_one_operand(op2,line_num,file_name,labels,code_img,IC);
+        if (status==-1) {
+            return -1;
+        }
+        if (status==0) {
             return 0;
         }
         return 1;
@@ -921,9 +1005,12 @@ int detect_line_type(char *line) {
     return LINE_ERROR;
 }
 
-int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTable *externs, char *label_name,macro_node *macro_table,int macro_count) {
+int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *labels, NameRefTable *externs, char *label_name,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char *token;
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     strcpy(temp,line);
     token = strtok(temp," \t\n");
     if (token == NULL) {
@@ -933,66 +1020,63 @@ int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTabl
         return 0; }
     if (strcmp(token, ".extern") !=0) {
         return 0; }
-  token = strtok(NULL, " \t\n");
-    
-    if (token ==NULL) { 
-       print_external_error(ERROR_44, loc); 
-        return 0; 
+    token = strtok(NULL, " \t\n");
+
+    if (token ==NULL) {
+        print_external_error(ERROR_44, loc);
+        return 0;
     }
-        
+
     if(!is_valid_label(token,labels,macro_table,macro_count)) {
         print_external_error(ERROR_44, loc);
         return 0; }
-    
+
     strcpy(label_name, token);
     token = strtok(NULL, " \t\n");
-    
+
     if (token!=NULL) {
         print_external_error(ERROR_32, loc);
         return 0; }
-    
+
     if (findLabel(labels, label_name) != -1) {
-    print_external_error(ERROR_55, loc);
-    return 0;
-}
+        print_external_error(ERROR_55, loc);
+        return 0;
+    }
     if (!addLabel(labels, label_name, 0,0,line_num)) {
         print_internal_error(ERROR_1);
-        return 0; }
+        return -1;
+    }
     labels->arr[labels->count - 1].is_extern = 1;
     if (!add_name_ref(externs, label_name, line_num)) {
-           print_internal_error(ERROR_1);
-        return 0;
+        print_internal_error(ERROR_1);
+        return -1;
     }
     return 1;
 }
 
-int handle_first_pass_line(char *line,
-                           int line_num,
-                           LabelTable *labels,
-                           CodeImage *code_img,
-                           CodeImage *data_img,
-                           NameRefTable *externs,
-                           NameRefTable *entries,
-                           int *IC,
-                           int *DC,macro_node *macro_table,int macro_count) {
+int handle_first_pass_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int *IC,int *DC,macro_node *macro_table,int macro_count) {
     int line_type;
     char extern_label[31];
+    location loc;
+    loc.file_name = file_name;
+    loc.line_num = line_num;
     line_type=detect_line_type(line);
     switch(line_type) {
         case LINE_EMPTY:
             return 1;
         case LINE_ENTRY:
-            return handle_entry_line(line,line_num,entries);
+            return handle_entry_line(line,line_num,file_name,entries);
         case LINE_EXTERN:
-            return handle_extern_line(line,line_num,labels,externs,extern_label,macro_table,macro_count);
+            return handle_extern_line(line,line_num,file_name,labels,externs,extern_label,macro_table,macro_count);
         case LINE_DATA:
-            return handle_data_line(line,line_num,labels,data_img,DC,labels,macro_table,macro_count);
+            return handle_data_line(line,line_num,file_name,labels,data_img,DC,labels,macro_table,macro_count);
         case LINE_STRING:
-            return handle_string_line(line,line_num,labels,data_img,DC,labels,macro_table,macro_count);
+            return handle_string_line(line,line_num,file_name,labels,data_img,DC,labels,macro_table,macro_count);
         case LINE_INSTRUCTION:
-            return handle_instruction_line(line,line_num,labels,code_img,IC,macro_table,macro_count);
+            return handle_instruction_line(line,line_num,file_name,labels,code_img,IC,macro_table,macro_count);
         case LINE_ERROR:
         default:
+            print_external_error(ERROR_31,loc);
             return 0;
     }
 }
@@ -1009,32 +1093,51 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     CodeImage data_img;
     NameRefTable externs;
     NameRefTable entries;
+    location loc;
+    int status;
     line_num = 0;
     IC = 100;
     DC = 0;
     error_found = 0;
-
+    loc.file_name = file_name;
     if (!init_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries)) {
-        printf("FAILED: init_first_pass_memory\n");
-        return 0;
+        print_internal_error(ERROR_1);
+        return -1;
     }
-
     fp = fopen(file_name, "r");
     if (fp == NULL) {
-        printf("FAILED: cannot open AM file: %s\n", file_name);
+        print_internal_error(ERROR_8);
         free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
         return 0;
     }
     while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
         line_num++;
+        loc.line_num = line_num;
+        if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 2] != '\n') {
+            print_external_error(ERROR_30, loc);
+            error_found = 1;
+
+            while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
+                if (strchr(line, '\n') != NULL) {
+                    break;
+                }
+            }
+
+            continue;
+        }
         if (is_blank_or_comment(line)) {
             continue;
         }
-        if (!handle_first_pass_line(line, line_num, &labels, &code_img, &data_img,
-                                    &externs, &entries, &IC, &DC,macro_table,macro_count)) {
-            printf("First pass error in line %d: %s", line_num, line);
-            error_found = 1;
-                                    }
+        status=handle_first_pass_line(line, line_num,file_name, &labels, &code_img, &data_img,&externs, &entries, &IC, &DC,macro_table,macro_count);
+            if (status==-1) {
+                fclose(fp);
+                free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
+                return 0;
+            }
+            if (status==0) {
+                error_found = 1;
+            }
+
     }
     fclose(fp);
     update_data_labels(&labels,IC);
