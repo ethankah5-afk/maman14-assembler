@@ -274,13 +274,22 @@ int handle_entry_line(char *line, int line_num, NameRefTable *entries) {
         return 0;
     }
     token = strtok(NULL, " \t\n");
-    if (token == NULL || !is_label_operands(token)) {
+    
+    if (token == NULL) { 
+          print_external_error(ERROR_37, loc);
+            return 0; 
+    }
+        
+    if(!is_label_operands(token)) {
+        print_external_error(ERROR_37, loc);
         return 0;
     }
     if (strtok(NULL, " \t\n")!=NULL) {
+        print_external_error(ERROR_32, loc);
         return 0;
     }
     if (!add_name_ref(entries, token, line_num)) {
+        print_internal_error(ERROR_1);
         return 0;
     }
     return 1;
@@ -300,32 +309,49 @@ int handle_data_line(char *line, int line_num, LabelTable *labels, CodeImage *da
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,table,macro_table,macro_count)) {
+             print_external_error(ERROR_44, loc);
             return 0;
         }
         strcpy(label_name, token);
         has_label = 1;
         token = strtok(NULL, " \t\n");
         if (token == NULL) {
+            print_external_error(ERROR_49, loc);
             return 0;
         }
     }
     if (strcmp(token, ".data") != 0) {
+         print_external_error(ERROR_58, loc);
         return 0;
     }
     if (has_label) {
+
+        if (findLabel(labels, label_name) != -1) {
+    print_external_error(ERROR_55, loc);
+    return 0;
+}
+        if (findLabel(labels, label_name) != -1) {
+    print_external_error(ERROR_55, loc);
+    return 0;
+}
+        
         if (!addLabel(labels, label_name, *DC, 1, line_num)) {
+               print_internal_error(ERROR_1);
             return 0;
         }
     }
     token = strtok(NULL, ", \t\n");
     if (token == NULL) {
+        print_external_error(ERROR_59, loc);
         return 0;
     }
     while (token != NULL) {
         if (!is_valid_number(token,&num)){
+            print_external_error(ERROR_50, loc);
             return 0;
         }
         if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
+            print_internal_error(ERROR_1);
             return 0;
         }
         (*DC)++;
@@ -368,32 +394,43 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,table,macro_table,macro_count)) {
+             print_external_error(ERROR_44, loc);
             return 0;
         }
         strcpy(label_name, token);
         has_label = 1;
         token = strtok(NULL, " \t\n");
         if (token == NULL) {
+            print_external_error(ERROR_49, loc);
             return 0;
         }
     }
     /* חייב להיות .string */
     if (strcmp(token, ".string") != 0) {
+        print_external_error(ERROR_58, loc);
         return 0;
     }
     /* אם יש label, מכניסים אותו */
     if (has_label) {
-        if (!addLabel(labels, label_name, *DC, 1, line_num)) {
+        if (findLabel(labels, label_name) != -1) {
+    print_external_error(ERROR_55, loc);
+    return 0;
+}
+        
+    if (!addLabel(labels, label_name, *DC, 1, line_num)) {
+            print_internal_error(ERROR_1);
             return 0;
         }
     }
     start_quote = strchr(line, '"');
     if (start_quote == NULL) {
+           print_external_error(ERROR_52, loc);
         return 0;
     }
 
     end_quote = strrchr(line, '"');
     if (end_quote == NULL || end_quote == start_quote) {
+        print_external_error(ERROR_52, loc);
         return 0;
     }
     /* בדיקת extra text אחרי המחרוזת */
@@ -403,17 +440,20 @@ int handle_string_line(char *line, int line_num, LabelTable *labels, CodeImage *
             after_quote++;
         }
         if (*after_quote != '\0') {
+              print_external_error(ERROR_53, loc);
             return 0;
         }
     }
     start_quote++;
     for (i = 0; start_quote + i < end_quote; i++) {
         if (!add_code_word(data_img, (unsigned short)start_quote[i], NULL, line_num)) {
+             print_internal_error(ERROR_1);
             return 0;
         }
         (*DC)++;
     }
     if (!add_code_word(data_img, (unsigned short)'\0', NULL, line_num)) {
+         print_internal_error(ERROR_1);
         return 0;
     }
     (*DC)++;
@@ -729,21 +769,30 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,labels,macro_table,macro_count)) {
+             print_external_error(ERROR_44, loc);
             return 0;
         }
         strcpy(label_name, token);
         has_label = 1;
         token = strtok(NULL, " \t\n");
         if (token == NULL) {
+            print_external_error(ERROR_31, loc);
             return 0;
         }
     }
     inst=findInstruction(token);
     if (inst==NULL) {
+          print_external_error(ERROR_31, loc);
         return 0;
     }
+    
+    if (findLabel(labels, label_name) != -1) {
+    print_external_error(ERROR_55, loc);
+    return 0;
+}
     if (has_label){
         if (!addLabel(labels,label_name,*IC,0,line_num)) {
+            print_internal_error(ERROR_1);
             return 0;
         }
     }
@@ -754,21 +803,25 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
 
     if (operands_line != NULL) {
         if (strstr(operands_line, ",,") != NULL) {
+            print_external_error(ERROR_39, loc);
             return 0;
         }
         if (operands_line[0] == ',') {
             return 0;
         }
         if (operands_line[strlen(operands_line) - 1] == ',') {
+            print_external_error(ERROR_47, loc);
             return 0;
         }
     }
     parse_operands(operands_line,op1,op2,&op_count);
 
     if (op_count==-1) {
+        print_external_error(ERROR_32, loc);
         return 0;
     }
     if (op_count!=inst->operand_count) {
+        print_external_error(ERROR_34, loc);
         return 0;
     }
 
@@ -776,28 +829,34 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
         src_type = get_addressing_type(op1);
         dest_type = get_addressing_type(op2);
         if (src_type == ADDR_INVALID || dest_type ==ADDR_INVALID) {
+            print_external_error(ERROR_33, loc);
             return 0;
         }
         if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
+             print_external_error(ERROR_33, loc);
             return 0;
         }
     }
     else if (op_count ==1) {
         dest_type = get_addressing_type(op1);
         if (dest_type == ADDR_INVALID) {
+            print_external_error(ERROR_33, loc);
             return 0;
         }
         if (!is_legal_addressing(inst, 0, dest_type, op_count)) {
+             print_external_error(ERROR_33, loc);
             return 0;
         }
     }
     else{
         if (!is_legal_addressing(inst,0,0,op_count)) {
+             print_external_error(ERROR_33, loc);
             return 0;
         }
     }
     first_word=build_first_word(inst,op1,op2,op_count);
     if (!add_code_word(code_img,first_word,NULL,line_num)){
+        print_internal_error(ERROR_1);
         return 0;
     }
     (*IC)++;
@@ -811,6 +870,7 @@ int handle_instruction_line(char *line,int line_num,LabelTable *labels,CodeImage
 
     if(op_count==2) {
         if (!handle_one_operand(op1,line_num,labels,code_img,IC)) {
+    
             return 0;
         }
         if (!handle_one_operand(op2,line_num,labels,code_img,IC)) {
@@ -869,20 +929,38 @@ int handle_extern_line(char *line, int line_num, LabelTable *labels, NameRefTabl
     if (token == NULL) {
         return 0; }
     if (token[strlen(token) -1] == ':') {
+        print_external_error(ERROR_44, loc);
         return 0; }
     if (strcmp(token, ".extern") !=0) {
         return 0; }
-    token = strtok(NULL, " \t\n");
-    if (token ==NULL || !is_valid_label(token,labels,macro_table,macro_count)) {
+  token = strtok(NULL, " \t\n");
+    
+    if (token ==NULL) { 
+       print_external_error(ERROR_44, loc); 
+        return 0; 
+    }
+        
+    if(!is_valid_label(token,labels,macro_table,macro_count)) {
+        print_external_error(ERROR_44, loc);
         return 0; }
+    
     strcpy(label_name, token);
     token = strtok(NULL, " \t\n");
+    
     if (token!=NULL) {
+        print_external_error(ERROR_32, loc);
         return 0; }
+    
+    if (findLabel(labels, label_name) != -1) {
+    print_external_error(ERROR_55, loc);
+    return 0;
+}
     if (!addLabel(labels, label_name, 0,0,line_num)) {
+        print_internal_error(ERROR_1);
         return 0; }
     labels->arr[labels->count - 1].is_extern = 1;
     if (!add_name_ref(externs, label_name, line_num)) {
+           print_internal_error(ERROR_1);
         return 0;
     }
     return 1;
