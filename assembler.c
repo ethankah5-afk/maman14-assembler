@@ -15,7 +15,6 @@ int main(int argc, char *argv[]) {
     for (i = 1; i < argc; i++) {
         char *as_file;
         char *am_file;
-        /* שלב 1: preproc */
         as_file = add_new_file(argv[i], ".as");
         if (!run_preproc(as_file,&macro_table,&macro_count)) {
             printf("Preproc failed\n");
@@ -28,6 +27,8 @@ int main(int argc, char *argv[]) {
             printf("First pass failed\n");
         }
         free_macro_table(macro_table,macro_count);
+        macro_table=NULL;
+        macro_count=0;
         free(as_file);
         free(am_file);
     }
