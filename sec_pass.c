@@ -20,19 +20,24 @@ void make_output_name(char *file_name, char *ext, char *out) {
         *dot = '\0';
     strcat(out,ext);
 }
-int mark_entry_labels(LabelTable *labels, NameRefTable *entries) {
+int mark_entry_labels(LabelTable *labels, NameRefTable *entries, char *file name) {
     int i;
-    int error_found=0;
+    int error_found;
     Label *lbl;
+    location loc;
+    
+    loc.file_name = file_name;
+    error_found=0; 
+    
     for(i=0; i<entries->count;i++) {
         lbl = find_label_by_name(labels, entries->arr[i].name);
         if(lbl ==NULL) {
-            printf("Error: entry label '%s' was not defined\n", entries->arr[i].name);
+            print_external_error(ERROR_36,loc);
             error_found=1;
             continue;
         }
         if(lbl->is_extern) {
-            printf("Error: label '%s' cannot be both entry and extern\n", entries->arr[i].name);
+         print_external_error(ERROR_56,loc);
             error_found = 1;
             continue;
         }
@@ -68,16 +73,23 @@ int is_extern_name(NameRefTable *externs, const char *name) {
     }
     return 0;
 }
-int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs) {
+int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefTable *externs, char *file_name) {
+    
     Label *lbl;
     int current_address;
+    location loc;
+    
+    loc.file_name = file_name;
+    loc.line_num = 0;
+    
     if(word->label == NULL) {
         return 1;
     }
-    current_address=100+index;
+    current_address = 100+index;
     if (word->label[0]=='%') {
         lbl = find_label_by_name(labels, word->label+1);
         if (lbl ==NULL||lbl->is_extern) {
+            print_external_error(ERROR_36,loc);
             return 0;
         }
         word->value=(unsigned short)(((lbl->address-current_address)<<2)|ARE_RELOCATABLE);
@@ -85,6 +97,7 @@ int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefT
     }
     lbl = find_label_by_name(labels, word->label);
     if (lbl==NULL) {
+        print_external_error(ERROR_36,loc);
         return 0;
     }
     if (is_extern_name(externs, word->label)) {
@@ -96,14 +109,15 @@ int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefT
     return 1;
 }
 
-int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *externs) {
+int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *externs, char *file_name) {
     int i;
+    int error_found =0; 
     for(i=0; i<code_img->count; i++) {
-        if (!resolve_one_code_word(&code_img->arr[i],i,labels, externs)) {
-            return 0;
+        if (!resolve_one_code_word(&code_img->arr[i],i,labels, externs, file_name)) {
+               error_found = 1;
         }
     }
-    return 1;
+    return !error_found;
 }
 int write_ent_file(char *file_name,LabelTable *labels) {
     int i;
@@ -120,6 +134,7 @@ int write_ent_file(char *file_name,LabelTable *labels) {
     make_output_name(file_name,".ent", ent_name);
     fp = fopen(ent_name, "w");
     if (fp==NULL) {
+        print_internal_error(ERROR_7);
         return 0;
     }
     for (i=0; i<labels->count; i++) {
@@ -138,6 +153,7 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     make_output_name(file_name,".ext",ext_name);
     fp = fopen(ext_name, "w");
     if (fp==NULL) {
+        print_internal_error(ERROR_7);
         return 0;
     }
     found=0;
@@ -161,6 +177,7 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
     make_output_name(file_name,".ob",ob_name);
     fp=fopen(ob_name,"w");
     if (fp==NULL) {
+        print_internal_error(ERROR_7);
         return 0;
     }
     fprintf(fp,"%d %d \n", IC -IC_INIT_VALUE, DC);
@@ -185,10 +202,10 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,int IC
 }*/
 int exe_sec_pass(char *file_name, LabelTable *labels, CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int IC,int DC) {
     int error_found=0;
-    if (!resolve_code_labels(code_img,labels,externs)) {
+    if (!resolve_code_labels(code_img,labels,externs,file_name)) {
         error_found=1;
     }
-    if (!mark_entry_labels(labels,entries)) {
+    if (!mark_entry_labels(labels,entries, file_name)) {
         error_found=1;
     }
     if (!error_found) {
