@@ -4,6 +4,7 @@
 #ifndef ASSEMBLERPROJECT_PREPROC_H
 #define ASSEMBLERPROJECT_PREPROC_H
 #include <stdio.h>
+#include "main_struct.h"
 int find_macro(macro_node *table, int table_size, char *name);
 void free_macro_table(macro_node *table, int table_size);
 char *add_new_file(char *file_name,char *ending);
