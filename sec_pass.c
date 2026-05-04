@@ -20,7 +20,7 @@ void make_output_name(char *file_name, char *ext, char *out) {
         *dot = '\0';
     strcat(out,ext);
 }
-int mark_entry_labels(LabelTable *labels, NameRefTable *entries, char *file name) {
+int mark_entry_labels(LabelTable *labels, NameRefTable *entries, char *file_name) {
     int i;
     int error_found;
     Label *lbl;
@@ -88,9 +88,14 @@ int resolve_one_code_word(CodeWord *word,int index, LabelTable *labels, NameRefT
     current_address = 100+index;
     if (word->label[0]=='%') {
         lbl = find_label_by_name(labels, word->label+1);
-        if (lbl ==NULL||lbl->is_extern) {
-            print_external_error(ERROR_36,loc);
-            return 0;
+        if (lbl ==NULL) { 
+             print_external_error(ERROR_36, loc);
+        return 0;
+        }
+        
+    if (lbl->is_extern) {
+            word->value = ARE_EXTERNAL;
+            return 1;
         }
         word->value=(unsigned short)(((lbl->address-current_address)<<2)|ARE_RELOCATABLE);
         return 1;
