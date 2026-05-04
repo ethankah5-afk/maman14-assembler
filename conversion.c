@@ -23,7 +23,6 @@ void toBinary12(unsigned short value, char *binary){
     }
     binary[12] = '\0';
 }
-
 char *find_first_data_number(char *line){
     char *p = strstr(line, ".data");
     if (p == NULL) {
