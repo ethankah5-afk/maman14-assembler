@@ -13,54 +13,51 @@ int main(int argc, char *argv[]) {
     int macro_count=0;
     int i;
 
-    if (argc < 2) { 
+    if (argc < 2) {
         print_internal_error(ERROR_2);
-        return 0; 
+        return 0;
     }
-    
+
     for (i = 1; i < argc; i++) {
-        
+
         char *as_file;
         char *am_file;
-        
+
         as_file = add_new_file(argv[i], ".as");
 
-        if(as_file ==NULL) {   
-        print_internal_error(ERROR_1);
-        return 0;    
+        if(as_file ==NULL) {
+            print_internal_error(ERROR_1);
+            return 0;
         }
 
         if (!run_preproc(as_file,&macro_table,&macro_count)) {
             print_internal_error(ERROR_15);
-            
-        if (macro_table != NULL) {
-            
-            free_macro_table(macro_table, macro_count);
-            macro_table = NULL;
-            macro_count = 0;}
-    
+
+            if (macro_table != NULL) {
+
+                free_macro_table(macro_table, macro_count);
+                macro_table = NULL;
+                macro_count = 0;}
+
             free(as_file);
             continue;
         }
         /* שלב 2: first pass */
         am_file = add_new_file(argv[i], ".am");
 
-    if(am_file == NULL) {
-        
-        print_internal_error(ERROR_1);
-         
-        free_macro_table(macro_table, macro_count);
-        macro_table = NULL;
-        macro_count = 0;
+        if(am_file == NULL) {
 
-        free(as_file);
-        return 0;
+            print_internal_error(ERROR_1);
 
-    }
+            free_macro_table(macro_table, macro_count);
+            macro_table = NULL;
+            macro_count = 0;
 
- 
-        exe_first_pass_and_second_pass(am_file,macro_table,macro_count);
-        
+            free(as_file);
+            return 0;
+
+        }
+        exe_passes(am_file,macro_table,macro_count);
         free_macro_table(macro_table,macro_count);
         macro_table=NULL;
         macro_count=0;
