@@ -920,7 +920,7 @@ int handle_first_pass_line(char *line,
 }
 //int is_blank_or_commet(char *line);
 //int is_valid_label(char *line);
-int exe_first_pass(char *file_name,macro_node *macro_table,int macro_count){
+int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     FILE *fp;
     char line[MAX_LINE_LENGTH];
     int line_num;
