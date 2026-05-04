@@ -25,14 +25,20 @@ int main(int argc, char *argv[]) {
         
         as_file = add_new_file(argv[i], ".as");
 
-        if(as_file ==NULL) {
-            
+        if(as_file ==NULL) {   
         print_internal_error(ERROR_1);
         return 0;    
         }
 
         if (!run_preproc(as_file,&macro_table,&macro_count)) {
             print_internal_error(ERROR_15);
+            
+        if (macro_table != NULL) {
+            
+            free_macro_table(macro_table, macro_count);
+            macro_table = NULL;
+            macro_count = 0;}
+    
             free(as_file);
             continue;
         }
@@ -40,15 +46,20 @@ int main(int argc, char *argv[]) {
         am_file = add_new_file(argv[i], ".am");
 
     if(am_file == NULL) {
-               print_internal_error(ERROR_1);
+        
+        print_internal_error(ERROR_1);
+         
+        free_macro_table(macro_table, macro_count);
+        macro_table = NULL;
+        macro_count = 0;
+
+        free(as_file);
+        return 0;
 
     }
 
-
-        
-        if (!exe_first_pass(am_file,macro_table,macro_count)) {
-            printf("First pass failed\n");
-        }
+ 
+        exe_first_pass_and_second_pass(am_file,macro_table,macro_count);
         
         free_macro_table(macro_table,macro_count);
         macro_table=NULL;
