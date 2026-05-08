@@ -1,0 +1,25 @@
+//
+// Created by ethan on 08/05/2026.
+//
+
+#ifndef ASSEMBLERPROJECT_CONSTANTS_H
+#define ASSEMBLERPROJECT_CONSTANTS_H
+#define REG_COUNT 8
+#define INSTRUCTIONS_COUNT 16
+#define ARE_EXTERNAL 1
+#define ARE_RELOCATABLE 2
+#define IC_INIT_VALUE 100
+#define MAX_LINE_LENGTH 81
+#define LINE_ERROR (-1)
+#define LINE_EMPTY 0
+#define LINE_ENTRY 1
+#define LINE_EXTERN 2
+#define LINE_DATA 3
+#define LINE_STRING 4
+#define LINE_INSTRUCTION 5
+#define ADDR_INVALID  (-1)
+#define ADDR_IMMEDIATE 0
+#define ADDR_DIRECT    1
+#define ADDR_RELATIVE  2
+#define ADDR_REGISTER  3
+#endif //ASSEMBLERPROJECT_CONSTANTS_H
