@@ -1,42 +1,57 @@
+//
+// Created by ethan on 25/03/2026.
+//
 #include <stdio.h>
-#include <stdlib.h>
-#include "preproc.h"
+#include <ctype.h>
 #include "first_pass.h"
-#include "util.h"
-
-/**
- * This is the main function that processes the input files.
- *
- * @param argc The number of command-line arguments.
- * @param argv An array of strings containing the command-line arguments.
- * @return Returns 0 on successful completion.
- */
+#include <stdlib.h>
+#include "main_struct.h"
+#include "pre_proc.h"
 int main(int argc, char *argv[]) {
-    char *as_file, *am_file;
-    while (--argc > 0) {
-        /* Generate a new file with the ".as" extension by adding it to the input filename.*/
-        printf("Start pre-proc\n");
-        as_file = add_new_file(argv[argc], ".as");
+    macro_node *macro_table=NULL;
+    int macro_count=0;
+    int i;
 
-        /*Execute the macro preprocessor on the ".as" file.*/
-        if (!mcro_exec(as_file)) {
-            /*If it failed, move to the next file.*/
-            continue;
+    if (argc < 2) {
+        print_internal_error(ERROR_2);
+        return 0;
+    }
+
+    for (i = 1; i < argc; i++) {
+
+        char *as_file;
+        char *am_file;
+
+        as_file = add_new_file(argv[i], ".as");
+
+        if(as_file ==NULL) {
+            print_internal_error(ERROR_1);
+            return 0;
         }
 
-        printf("Start first pass\n");
-        /* Generate a new file with the ".am" extension by adding it to the input filename.*/
-        am_file = add_new_file(argv[argc], ".am");
-        /*Execute the first pass, and then the second on the ".am" file.*/
-        if (exe_first_pass(am_file)) {
-            /*If it failed, move to the next file.*/
+        if (!run_preproc(as_file,&macro_table,&macro_count)) {
+            if (macro_table != NULL) {
+                free_macro_table(macro_table, macro_count);
+                macro_table = NULL;
+                macro_count = 0;}
+            free(as_file);
             continue;
         }
-
-        /*Free allocated memory*/
+        am_file = add_new_file(argv[i], ".am");
+        if(am_file == NULL) {
+            print_internal_error(ERROR_1);
+            free_macro_table(macro_table, macro_count);
+            macro_table = NULL;
+            macro_count = 0;
+            free(as_file);
+            return 0;
+        }
+        exe_passes(am_file,macro_table,macro_count);
+        free_macro_table(macro_table,macro_count);
+        macro_table=NULL;
+        macro_count=0;
         free(as_file);
         free(am_file);
     }
-    printf("end\n");
     return 0;
 }
