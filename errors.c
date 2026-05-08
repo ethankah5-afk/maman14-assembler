@@ -58,7 +58,6 @@ Error errors[] = {
         {ERROR_51, "Comma after the last number in a '.data' line"},
         {ERROR_52, "Missing quotes in .string"},
         {ERROR_53, "Extra text after .string"},
-        {ERROR_54, "IC too big for word CPU word length"},
         {ERROR_55, "Label definition is written more than once"},
         {ERROR_56, "Label defined as .extern and .entry"},
         {ERROR_57, "Input number in .data line is out of range"},
