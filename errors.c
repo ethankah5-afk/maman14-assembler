@@ -27,41 +27,28 @@ Error errors[] = {
         {ERROR_14, "Failed to copy file during macros expansion"},
         {ERROR_15, "Macros expansion in an .as file failed"},
         {ERROR_16, "Illegal macro name"},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {-1,            ""},
-        {ERROR_31, "not valid opcode"},
-        {ERROR_32, "Line contains extra text"},
-        {ERROR_33, "Illegal argument"},
-        {ERROR_34, "Missing argument"},
-        {ERROR_35, "Missing comma between operands"},
-        {ERROR_36, "Undefined label"},
-        {ERROR_37, "Illegal label after .entry"},
-        {ERROR_39, "More commas than needed"},
-        {ERROR_40, "Comma in the wrong place"},
-        {ERROR_42, "Illegal char"},
-        {ERROR_43, "Missing comma between numbers"},
-        {ERROR_44, "Illegal label"},
-        {ERROR_47, "Illegal comma before opcode"},
-        {ERROR_49, "Data line without '.' before directive"},
-        {ERROR_50, "Instruction '.data' line contains non-number info"},
-        {ERROR_51, "Comma after the last number in a '.data' line"},
-        {ERROR_52, "Missing quotes in .string"},
-        {ERROR_53, "Extra text after .string"},
-        {ERROR_55, "Label definition is written more than once"},
-        {ERROR_56, "Label defined as .extern and .entry"},
-        {ERROR_57, "Input number in .data line is out of range"},
-        {ERROR_58, "Illegal data line directive"},
+        {ERROR_17, "not valid opcode"},
+        {ERROR_32, "Line contains extra text"},//18
+        {ERROR_33, "Illegal argument"},//19
+        {ERROR_34, "Missing argument"},//20
+        {ERROR_35, "Missing comma between operands"},//21
+        {ERROR_36, "Undefined label"},//22
+        {ERROR_37, "Illegal label after .entry"},//23
+        {ERROR_39, "More commas than needed"},//24
+        {ERROR_40, "Comma in the wrong place"},//25
+        {ERROR_42, "Illegal char"},//26
+        {ERROR_43, "Missing comma between numbers"},//27
+        {ERROR_44, "Illegal label"},//28
+        {ERROR_47, "Illegal comma before opcode"},//29
+        {ERROR_49, "Data line without '.' before directive"},//30
+        {ERROR_50, "Instruction '.data' line contains non-number info"},//31
+        {ERROR_51, "Comma after the last number in a '.data' line"},//32
+        {ERROR_52, "Missing quotes in .string"},//33
+        {ERROR_53, "Extra text after .string"},//34
+        {ERROR_55, "Label definition is written more than once"},//35
+        {ERROR_56, "Label defined as .extern and .entry"},//36
+        {ERROR_57, "Input number in .data line is out of range"},//37
+        {ERROR_58, "Illegal data line directive"},//38
 };
 
 char *get_error_msg(int error_code){
