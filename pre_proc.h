@@ -4,7 +4,6 @@
 #ifndef ASSEMBLERPROJECT_PREPROC_H
 #define ASSEMBLERPROJECT_PREPROC_H
 #include <stdio.h>
-
 #include "errors.h"
 #include "main_struct.h"
 int find_macro(macro_node *table, int table_size, char *name);
