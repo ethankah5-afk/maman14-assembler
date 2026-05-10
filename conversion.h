@@ -1,44 +1,12 @@
 //
-// Created by ethan on 08/03/2026.
+// Created by ethan on 30/04/2026.
 //
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include "main_struct.h"
-#include "conversion.h"
-unsigned short regToShort(char *reg_before) {
-    int num_of_reg=findReg(reg_before);
-    if (num_of_reg<0) {
-        return 0;
-    }
-    return (unsigned short)(1<<num_of_reg);
-}
-void toBinary12(unsigned short value, char *binary){
-    int i;
-    unsigned short mask = 1 << 11;
-    for (i = 0; i < 12; i++) {
-        binary[i] = (value & mask) ? '1' : '0';
-        mask >>= 1;
-    }
-    binary[12] = '\0';
-}
 
-char *find_first_data_number(char *line){
-    char *p = strstr(line, ".data");
-    if (p == NULL) {
-        return NULL;
-    }
-    p += 5;
-    while (*p && isspace((unsigned char)*p)) {
-        p++;
-    }
-    return p;
-}
-char *convert_word_to_hex(unsigned short word,char res[4]) {
-    char hex_table[] = "0123456789ABCDEF";
-    res[0] = hex_table[(word >> 8) & 0xF];
-    res[1] = hex_table[(word >> 4) & 0xF];
-    res[2] = hex_table[word & 0xF];
-    res[3] = '\0';
-    return res;
-}
+#ifndef ASSEMBLERPROJECT_CONVERSION_H
+#define ASSEMBLERPROJECT_CONVERSION_H
+unsigned short regToShort(char *reg_before);
+void toBinary12(unsigned short value, char *binary);
+char *find_first_data_number(char *line);
+char *convert_word_to_hex(unsigned short word,char res[4]);
+
+#endif //ASSEMBLERPROJECT_CONVERSION_H
