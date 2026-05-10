@@ -8,14 +8,7 @@
 #ifndef LABRATORY_C_FINAL_PROJECT_ERRORS_H
 #define LABRATORY_C_FINAL_PROJECT_ERRORS_H
 
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "Errors.h"
-#include "globals.h"
-#include "table.h"
-#include "util.h"
+#include "main_struct.h"
 
 /* Represents an error with an associated error ID and error message */
 typedef struct Error {
@@ -44,10 +37,19 @@ typedef enum ERROR_CODES {
     ERROR_15,
     ERROR_16,
     ERROR_17,
-    /* Enumeration skip for future macro related errors */
-
-    /* The following errors are related to reading command assembly lines */
-    ERROR_30 = 30,
+    ERROR_18,
+    ERROR_19,
+    ERROR_20,
+    ERROR_21,
+    ERROR_22,
+    ERROR_23,
+    ERROR_24,
+    ERROR_25,
+    ERROR_26,
+    ERROR_27,
+    ERROR_28,
+    ERROR_29,
+    ERROR_30,
     ERROR_31,
     ERROR_32,
     ERROR_33,
@@ -56,30 +58,6 @@ typedef enum ERROR_CODES {
     ERROR_36,
     ERROR_37,
     ERROR_38,
-    ERROR_39,
-    ERROR_40,
-    ERROR_41,
-    ERROR_42,
-    ERROR_43,
-    ERROR_44,
-    ERROR_45,
-    ERROR_46,
-    ERROR_47,
-    ERROR_48,
-    ERROR_49,
-    /* Enumeration skip for future command reading related errors */
-
-    /* The following errors are related to reading instruction .data or .string lines related errors */
-    ERROR_50 = 50,
-    ERROR_51,
-    ERROR_52,
-    ERROR_53,
-    ERROR_54,
-    ERROR_55,
-    ERROR_56,
-    ERROR_57,
-    ERROR_58,
-    ERROR_59
 } ERROR_CODES;
 
 /**
