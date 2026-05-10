@@ -6,7 +6,6 @@
 #include <ctype.h>
 #include "main_struct.h"
 #include "conversion.h"
-#define MAX_LINE 81
 unsigned short regToShort(char *reg_before) {
     int num_of_reg=findReg(reg_before);
     if (num_of_reg<0) {
@@ -23,6 +22,7 @@ void toBinary12(unsigned short value, char *binary){
     }
     binary[12] = '\0';
 }
+
 char *find_first_data_number(char *line){
     char *p = strstr(line, ".data");
     if (p == NULL) {
@@ -33,4 +33,12 @@ char *find_first_data_number(char *line){
         p++;
     }
     return p;
+}
+char *convert_word_to_hex(unsigned short word,char res[4]) {
+    char hex_table[] = "0123456789ABCDEF";
+    res[0] = hex_table[(word >> 8) & 0xF];
+    res[1] = hex_table[(word >> 4) & 0xF];
+    res[2] = hex_table[word & 0xF];
+    res[3] = '\0';
+    return res;
 }
