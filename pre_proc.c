@@ -7,9 +7,8 @@
 #include "main_struct.h"
 #include "pre_proc.h"
 #include "errors.h"
-#include "first_pass.h"
-#define MAX_LINE_LENGTH 81
-
+#include "parser.h"
+#include "constants.h"
 void free_macro_table(macro_node *table, int table_size) {
     int i;
     for (i = 0; i < table_size; i++) {
@@ -187,7 +186,17 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
             continue;
         }
         if (macro_status==1) {
-            /* שמור מיקום תחילת תוכן המאקרו */
+            if (findInstruction(mcro_name) != NULL ||
+                findReg(mcro_name) != -1 ||
+                strcmp(mcro_name, ".data") == 0 ||
+                strcmp(mcro_name, ".string") == 0 ||
+                strcmp(mcro_name, ".extern") == 0 ||
+                strcmp(mcro_name, ".entry") == 0||
+                strlen(mcro_name)>31){
+                print_external_error(ERROR_16, file_location);
+                error_found = 1;
+                continue;
+            }
             if (fgetpos(fp_in, &pos)!=0) {
                 print_internal_error(ERROR_11);
                 fclose(fp_in);
