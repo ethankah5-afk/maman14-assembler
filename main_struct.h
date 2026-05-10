@@ -5,6 +5,12 @@
 #define ASSEMBLERPROJECT_MAIN_STRUCT_H
 
 int findReg(char *str);
+
+typedef struct location {
+    char *file_name;
+    int line_num;
+} location;
+
 typedef struct Instruction{
     char *name;
     int opcode;
