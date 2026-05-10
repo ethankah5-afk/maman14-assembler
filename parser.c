@@ -110,7 +110,7 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
         p++;
     }
     if (*p == '\0' || *p == '\n') {
-        *error_code = ERROR_49; /* no .data arguments */
+        *error_code = ERROR_20; /* no .data arguments */
         return 0;
     }
     while (*p != '\0' && *p != '\n') {
@@ -118,16 +118,16 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
             p++;
         }
         if (*p == ',') {
-            *error_code = ERROR_39; /* too many commas / comma in wrong place */
+            *error_code = ERROR_24; /* too many commas / comma in wrong place */
             return 0;
         }
         num = strtol(p, &endptr, 10);
         if (p == endptr) {
-            *error_code = ERROR_50; /* not a number */
+            *error_code = ERROR_31; /* not a number */
             return 0;
         }
         if (num < -2048 || num > 2047) {
-            *error_code = ERROR_57; /* out of range */
+            *error_code = ERROR_37; /* out of range */
             return 0;
         }
         while (*endptr == ' ' || *endptr == '\t') {
@@ -142,7 +142,7 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
             return 1;
         }
         if (*endptr != ',') {
-            *error_code = ERROR_43;
+            *error_code = ERROR_27;
             return 0;
         }
         endptr++;
@@ -150,7 +150,7 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
             endptr++;
         }
         if (*endptr == '\0' || *endptr == '\n') {
-            *error_code = ERROR_51;
+            *error_code = ERROR_32;
             return 0;
         }
         if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
@@ -186,7 +186,7 @@ int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,i
     if (label_name[0] == '\0') {
         return 0;
     }
-    if (strlen(label_name) > 30) {
+    if (strlen(label_name) > 31) {
         return 0;
     }
     if (!isalpha((unsigned char)label_name[0])) {
