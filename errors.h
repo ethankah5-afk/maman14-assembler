@@ -5,9 +5,6 @@
 #ifndef ASSEMBLERPROJECT_ERRORS_H
 #define ASSEMBLERPROJECT_ERRORS_H
 
-#ifndef LABRATORY_C_FINAL_PROJECT_ERRORS_H
-#define LABRATORY_C_FINAL_PROJECT_ERRORS_H
-
 #include "main_struct.h"
 
 /* Represents an error with an associated error ID and error message */
@@ -60,24 +57,10 @@ typedef enum ERROR_CODES {
     ERROR_38,
 } ERROR_CODES;
 
-/**
- * @brief Prints an external error message.
- *
- * This function prints to stdout an error that is related to an error in the source file
- * with error number and the error location in the source file
- * @param error_code error number
- * @param file a pointer to a struct which contains the source file name and line information
- */
+
 void print_external_error(int error_code, location file);
 
-/**
- * @brief Prints an internal error message.
- *
- * This function prints to stdout an error that is a result of an internal process and NOT an error in the source file
- * @param error_code error number
- */
+
 void print_internal_error(int error_code);
 
 #endif
-
-#endif //ASSEMBLERPROJECT_ERRORS_H
