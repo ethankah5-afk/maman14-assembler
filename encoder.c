@@ -7,6 +7,7 @@
 #include "tables.h"
 #include "errors.h"
 #include "parser.h"
+#include "sec_pass.h"
 
 int get_addressing_type(char *op) {
     if (op == NULL || op[0] == '\0') {
@@ -33,7 +34,20 @@ int get_addressing_type(char *op) {
     }
     return ADDR_INVALID;
 }
-
+char get_are_char(CodeWord *word, NameRefTable *externs) {
+    char *name;
+    if (word->label == NULL) {
+        return 'A';
+    }
+    name = word->label;
+    if (name[0] == '%'){
+            name++;
+    }
+    if (is_extern_name(externs,name)){
+        return 'E';
+    }
+    return 'R';
+}
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count) {
     unsigned short word = 0;
     int src_type=0;
