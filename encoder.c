@@ -158,7 +158,7 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
         (*IC)++;
         return 1;
     }
-    print_external_error(ERROR_33, loc);
+    print_external_error(ERROR_19, loc);
     return 0;
 }
 int is_one_of(int type, int a, int b, int c, int d) {
@@ -244,25 +244,25 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,labels,macro_table,macro_count)) {
-             print_external_error(ERROR_44, loc);
+             print_external_error(ERROR_28, loc);
             return 0;
         }
         strcpy(label_name, token);
         has_label = 1;
         token = strtok(NULL, " \t\n");
         if (token == NULL) {
-            print_external_error(ERROR_31, loc);
+            print_external_error(ERROR_17, loc);
             return 0;
         }
     }
     inst=findInstruction(token);
     if (inst==NULL) {
-          print_external_error(ERROR_31, loc);
+          print_external_error(ERROR_17, loc);
         return 0;
     }
 
     if (has_label && findLabel(labels, label_name) != -1) {
-        print_external_error(ERROR_55, loc);
+        print_external_error(ERROR_35, loc);
         return 0;
     }
     if (has_label){
@@ -276,29 +276,29 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
     op2[0] = '\0';
     if (operands_line != NULL) {
         if (strstr(operands_line, ",,") != NULL) {
-            print_external_error(ERROR_39, loc);
+            print_external_error(ERROR_24, loc);
             return 0;
         }
         if (operands_line[0] == ',') {
-            print_external_error(ERROR_40, loc);
+            print_external_error(ERROR_25, loc);
             return 0;
         }
         if (operands_line[strlen(operands_line) - 1] == ',') {
-            print_external_error(ERROR_47, loc);
+            print_external_error(ERROR_18, loc);
             return 0;
         }
     }
     if (operands_line!=NULL&&inst->operand_count==2&&strchr(operands_line,',')==NULL) {
-        print_external_error(ERROR_35,loc);
+        print_external_error(ERROR_21,loc);
         return 0;
     }
     parse_operands(operands_line,op1,op2,&op_count);
     if (op_count==-1) {
-        print_external_error(ERROR_32, loc);
+        print_external_error(ERROR_18, loc);
         return 0;
     }
     if (op_count!=inst->operand_count) {
-        print_external_error(ERROR_34, loc);
+        print_external_error(ERROR_20, loc);
         return 0;
     }
 
@@ -306,28 +306,28 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
         src_type = get_addressing_type(op1);
         dest_type = get_addressing_type(op2);
         if (src_type == ADDR_INVALID || dest_type ==ADDR_INVALID) {
-            print_external_error(ERROR_33, loc);
+            print_external_error(ERROR_19, loc);
             return 0;
         }
         if (!is_legal_addressing(inst, src_type, dest_type, op_count)) {
-             print_external_error(ERROR_33, loc);
+             print_external_error(ERROR_19, loc);
             return 0;
         }
     }
     else if (op_count ==1) {
         dest_type = get_addressing_type(op1);
         if (dest_type == ADDR_INVALID) {
-            print_external_error(ERROR_33, loc);
+            print_external_error(ERROR_19, loc);
             return 0;
         }
         if (!is_legal_addressing(inst, 0, dest_type, op_count)) {
-             print_external_error(ERROR_33, loc);
+             print_external_error(ERROR_19, loc);
             return 0;
         }
     }
     else{
         if (!is_legal_addressing(inst,0,0,op_count)) {
-             print_external_error(ERROR_33, loc);
+             print_external_error(ERROR_19, loc);
             return 0;
         }
     }
