@@ -1,6 +1,6 @@
-//
-// Created by ethan on 08/05/2026.
-//
+    /* 
+    * Created by Ethan and Yakir 
+    */
 
 #ifndef ASSEMBLERPROJECT_CONSTANTS_H
 #define ASSEMBLERPROJECT_CONSTANTS_H
@@ -22,4 +22,5 @@
 #define ADDR_DIRECT    1
 #define ADDR_RELATIVE  2
 #define ADDR_REGISTER  3
-#endif //ASSEMBLERPROJECT_CONSTANTS_H
+
+#endif      /* ASSEMBLERPROJECT_CONSTANTS_H  */
