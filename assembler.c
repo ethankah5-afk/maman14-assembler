@@ -1,5 +1,5 @@
 //
-// Created by ethan on 25/03/2026
+// Created by ethan on 25/03/2026.
 //
 #include <stdio.h>
 #include <ctype.h>
