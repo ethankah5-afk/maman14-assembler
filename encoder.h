@@ -7,6 +7,7 @@
 
 #include "main_struct.h"
 
+char get_are_char(CodeWord *word, NameRefTable *externs);
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count);
 unsigned short encode_immediate(char *op);
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count);
