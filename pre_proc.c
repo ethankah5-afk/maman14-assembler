@@ -1,6 +1,6 @@
-//
-// Created by ethan on 09/03/2026.
-//
+/*
+* Created by Ethan and Yakir 
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,14 +9,27 @@
 #include "errors.h"
 #include "parser.h"
 #include "constants.h"
+
+/* 
+* Free macro table memory
+* table - macros table 
+* table_size - number of macros 
+*/
 void free_macro_table(macro_node *table, int table_size) {
     int i;
+    /* Free all macro names and contents */
     for (i = 0; i < table_size; i++) {
         free(table[i].name);
         free(table[i].content);
     }
     free(table);
 }
+/* 
+* Build file name with new extension
+* file_name - source file name 
+* ending - new extension
+* return - new file name
+*/
 
 char *add_new_file(char *file_name, char *ending) {
     char *dot;
@@ -28,30 +41,48 @@ char *add_new_file(char *file_name, char *ending) {
     }
 
     strcpy(new_file_name, file_name);
-
+    
+    /* Find current extension   */
     dot = strchr(new_file_name, '.');
+
+    /* Remove old extension */
     if (dot != NULL) {
         *dot = '\0';
     }
-
+    
+    /* Add new extension */
     strcat(new_file_name, ending);
     return new_file_name;
 }
+
+/* 
+* check if line defines a macro
+*line_num - source line
+*mcro_name - returned macro name
+*error_code - returned error code
+*return - status code
+*/
 
 int is_macro(char *line_num,char **mcro_name,ERROR_CODES *error_code) {
     char *token;
     char *extra;
     token= strtok(line_num," \t\n");
     if (token == NULL) return 0;
+    
+    /* Line does not start with mcro */
     if (strcmp(token,"mcro")!=0) {
         return 0;
     }
     token= strtok(NULL," \t\n");
+    
+    /* if Missing macro name */
     if (token == NULL) {
         *error_code=ERROR_9;
         return -1;
     }
     *mcro_name=token;
+
+    /* Detect extra text after macro name */
     extra = strtok(NULL," \t\n");
     if (extra != NULL) {
         *error_code=ERROR_10;
@@ -60,6 +91,14 @@ int is_macro(char *line_num,char **mcro_name,ERROR_CODES *error_code) {
     return 1;
 }
 
+/*
+* Save macro content from file
+* fp - source file 
+* pos - position in file
+* line_count - current line counter
+* error_code - returned error code
+* return - macro content
+*/
 char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *error_code) {
     char *p;
     int found_end=0;
@@ -67,20 +106,28 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
     char *mcro;
     char str[MAX_LINE_LENGTH];
     char str_copy[MAX_LINE_LENGTH];
+
+    /* Set file position to saved macro start  */
     if (fsetpos(fp,pos)!=0) {
         *error_code=ERROR_11;
         return NULL;
     }
     str[0]='\0';
+    
+    /* Calculate macro content length */
     while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL) {
         (*line_count)++;
         strcpy(str_copy,str);
         trim_spaces(str_copy);
+
+        /*Detect mcroend line */
         if (strncmp(str_copy,"mcroend",7)==0) {
             p=str_copy+7;
             while (*p==' '||*p=='\t') {
                 p++;
             }
+            
+            /* extra text after mcroend */
             if (*p!='\n'&&*p!='\0') {
                 *error_code=ERROR_12;
                 return NULL;
@@ -90,6 +137,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
         }
         mcro_length+=(int)strlen(str);
     }
+    /* missing mcroend */
     if (!found_end) {
         *error_code=ERROR_15;
         return NULL;
@@ -99,17 +147,27 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
         *error_code=ERROR_1;
         return NULL;
     }
+    /* Return again to macro content start */
     if (fsetpos(fp,pos)!=0) {
         *error_code=ERROR_11;
         free(mcro);
         return NULL;
     }
     mcro[0]= '\0';
+
+    /* Copy macro lines*/
     while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strncmp(str,"mcroend",7)!=0) {
         strcat(mcro,str);
     }
     return mcro;
 }
+
+/*
+*check if line is macro call 
+* line - source line
+* macro_name - macro name
+* return - 1 if is macro call otherwise 0 
+*/
 int is_macro_call(char *line, char *macro_name) {
     char copy[MAX_LINE_LENGTH];
     char *token;
@@ -119,20 +177,32 @@ int is_macro_call(char *line, char *macro_name) {
     if (token == NULL) {
         return 0;
     }
+    /* First token does not match macro */
     if (strcmp(token, macro_name) != 0) {
         return 0;
     }
+    
+    /*  Macro call cannot contain extra text */
     extra = strtok(NULL, " \t\n");
     if (extra != NULL) {
         return 0;
     }
     return 1;
 }
+
+/* 
+* Find macro by name
+* table - macros table
+* table_size - number of macros
+* name - macro name 
+* return - 1 if found otherwise -1
+*/
 int find_macro(macro_node *table, int table_size, char *name) {
     int i;
     if(table ==NULL || name == NULL) {
         return -1;
     }
+    /* Search macro table */
     for (i =0; i<table_size;i++) {
         if(strcmp(table[i].name, name) == 0) {
             return 1;
