@@ -68,10 +68,20 @@ char get_are_char(CodeWord *word, NameRefTable *externs) {
     return 'R';
 }
 
+  /* 
+  * Build first instruction word 
+  * inst - instruction information 
+  * op1 - source operand 
+  * op2 - destination operand 
+  * op_count - number of operands 
+  * return - encoded first word 
+  */
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count) {
     unsigned short word = 0;
+    /* Source and destination addressing types */
     int src_type=0;
     int dest_type=0;
+    
     if (op_count==2) {
         src_type=get_addressing_type(op1);
         dest_type=get_addressing_type(op2);
@@ -84,28 +94,58 @@ unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_
         src_type=0;
         dest_type=0;
     }
+  /* Encode opcode bits 8-11  */ 
     word |= ((unsigned short)inst->opcode << 8);
+    
+/* Encode funct into bits 4-7  */
     word |= ((unsigned short)inst->funct << 4);
+    
+ /* Encode source operand type  */
     word |= ((unsigned short)src_type << 2);
+    
+ /* Encode destination operand type  */
     word |= (unsigned short)dest_type;
+    
     return word;
 }
+ /* 
+ * Encode immediate operand 
+ * op - operand string 
+ * return - encoded immediate value 
+ */
 unsigned short encode_immediate(char *op) {
     int num;
     if (!is_valid_number(op + 1, &num)) {
         return 0;
     }
+    /* Keep only the lower 12 bits */
     return (unsigned short)(num & 0x0FFF);
 }
-
+ /* 
+ * Encode register operand 
+ * op - register operand 
+ * return - encoded register value
+ */
 unsigned short encode_register(char *op) {
     int reg_num;
     reg_num=findReg(op);
     if (reg_num<0){
         return 0;
     }
+     /* Encode Register using the matching bit */
     return (unsigned short)(1<<reg_num);
 }
+
+
+/* 
+* Handle operand encoding 
+* op - operand string 
+* line_num - current line number 
+* file_name - source file name 
+* labels - labels table 
+* code_img - code image 
+* IC - instruction counter  
+ */
 
 int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC) {
     int operand_address;
@@ -117,6 +157,8 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
     loc.line_num = line_num;
     operand_address= *IC;
     type = get_addressing_type(op);
+    
+    /* Handle immediate operand  */
     if (type == ADDR_IMMEDIATE) {
         value=encode_immediate(op);
         if (!add_code_word(code_img, value, NULL, line_num)) {
@@ -126,6 +168,7 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
         (*IC)++;
         return 1;
     }
+    /* Handle register operand */
     if (type == ADDR_REGISTER) {
         value=encode_register(op);
         if (!add_code_word(code_img, value, NULL, line_num)) {
@@ -134,9 +177,12 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
         }
         (*IC)++;
         return 1;
-    }
-    if (type == ADDR_DIRECT) {
+    } 
+    /* Handle direct label operand */
+    if (type == ADDR_DIRECT) { 
         idx = findLabel(labels, op);
+        
+        /* Label already resolved in the first pass */
         if (idx != -1 &&
             labels->arr[idx].is_data == 0 &&
             labels->arr[idx].is_extern == 0) {
@@ -148,6 +194,7 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
                 return -1;
                                }
             } else {
+             /* Label will be resolved in the second pass */
                 if (!add_code_word(code_img, 0, op, line_num)) {
                     print_internal_error(ERROR_1);
                     return -1;
@@ -156,6 +203,7 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
         (*IC)++;
         return 1;
     }
+     /* Handle relative label operand */
     if (type == ADDR_RELATIVE) {
         char rel_label[31];
         strcpy(rel_label, op + 1);
@@ -163,6 +211,8 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
         if (idx != -1 &&
             labels->arr[idx].is_data == 0 &&
             labels->arr[idx].is_extern == 0) {
+            
+      /* Calculate relative address */
             if (!add_code_word(code_img,
                                (unsigned short)(labels->arr[idx].address - operand_address),
                                NULL,
@@ -170,6 +220,7 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
                 print_internal_error(ERROR_1);
                 return -1;}
             } else {
+            /* Label will be resolved in the second pass */
                 if (!add_code_word(code_img, 0, op, line_num)) {
                     print_internal_error(ERROR_1);
                     return -1;
