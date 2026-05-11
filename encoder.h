@@ -40,7 +40,7 @@ unsigned short encode_immediate(char *op);
 * labels - labels table 
 * code_img - code image 
 * IC - instruction counter 
-* marco_table - macros table 
+* macro_table - macros table 
 * macro_count - number of macros 
 */
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count);
