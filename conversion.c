@@ -8,7 +8,7 @@
 #include "conversion.h"
 
 /* 
-* Convert register name to its binary representaion
+* Convert register name to its binary representation
 * reg_before - register name 
 * return - register binary value 
 */
@@ -45,7 +45,7 @@ void toBinary12(unsigned short value, char *binary){
 /* 
 * find the first number after .data
 * line - source line 
-* return - pointer to the frist data number 
+* return - pointer to the first data number 
 */
 char *find_first_data_number(char *line){
     char *p = strstr(line, ".data");
@@ -62,7 +62,7 @@ char *find_first_data_number(char *line){
 }
 /* 
 * Convert a machine word into a hexadecimal string
-* word - machine to to convert 
+* word - machine to convert 
 * res - output hexadecimal string 
 * return - pointer to result 
 */
