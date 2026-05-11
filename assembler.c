@@ -23,13 +23,13 @@ int main(int argc, char *argv[]) {
         print_internal_error(ERROR_2);
         return 0;
     }
-/*Go over all the files received from the command line */
+/* Go over all the files received from the command line */
     for (i = 1; i < argc; i++) {
 
         char *as_file;
         char *am_file;
         
-    /*Create as. file name */
+    /* Create as. file name */
         as_file = add_new_file(argv[i], ".as");
 
         if(as_file ==NULL) {
