@@ -33,10 +33,10 @@ char *add_new_file(char *file_name,char *ending);
 
 /* 
 * check if line defines a macro
-*line_num - source line
-*mcro_name - returned macro name
-*error_code - returned error code
-*return - status code
+* line_num - source line
+* mcro_name - returned macro name
+* error_code - returned error code
+* return - status code
 */
 
 int is_macro(char *line_num,char **mcro_name,ERROR_CODES *error_code);
@@ -52,7 +52,7 @@ int is_macro(char *line_num,char **mcro_name,ERROR_CODES *error_code);
 char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *error_code);
 
 /*
-*check if line is macro call 
+* check if line is macro call 
 * line - source line
 * macro_name - macro name
 * return - 1 if is macro call otherwise 0 
@@ -64,7 +64,7 @@ int is_macro_call(char *line,char *macro_name);
 * file_name - source file name
 * macro_table - returned macros table 
 * macro_count - returned number of macros
-* return - 1 if succes if not 0
+* return - 1 if success if not 0
 */
 int run_preproc(char *file_name,macro_node **macro_table,int *macro_count);
 
