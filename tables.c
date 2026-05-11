@@ -113,7 +113,7 @@ int init_code_image(CodeImage *img) {
 }
 
 /* 
-* Add code word to to code image
+* Add code word to code image
 * img - code image 
 * value - machine word value 
 * label - unresolved label 
@@ -123,7 +123,7 @@ int init_code_image(CodeImage *img) {
 int add_code_word(CodeImage *img, unsigned short value, const char *label, int line) {
     CodeWord *temp;
 
-    /* Increase code image size if needed * */
+    /* Increase code image size if needed */
     if (img->count == img->capacity) {
         img->capacity *= 2;
         temp = (CodeWord *)realloc(img->arr, img->capacity * sizeof(CodeWord));
