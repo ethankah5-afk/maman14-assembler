@@ -1,6 +1,7 @@
-//
-// Created by ethan on 08/05/2026.
-//
+/* 
+* Created by Ethan and Yakir 
+*/
+
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -8,15 +9,19 @@
 #include "constants.h"
 #include "tables.h"
 
-
+/*
+* Remove spaces (Leading and Trailing) 
+* str - string to trim 
+*/
 void trim_spaces(char *str) {
     char *start = str;
     char *end;
-
+    
+    /* skip  leading spaces */
     while (isspace((unsigned char)*start)) {
         start++;
     }
-
+    /* Move trimmed string to the beginning */
     if (start != str) {
         memmove(str, start, strlen(start) + 1);
     }
@@ -24,24 +29,45 @@ void trim_spaces(char *str) {
         return;
     }
     end = str + strlen(str) - 1;
+
+    /* Remove trailing spaces */
     while (end >= str && isspace((unsigned char)*end)) {
         *end = '\0';
         end--;
     }
 }
+
+/* 
+* check if line is empty or comment
+* line - source line
+* return - 1 if is blank/comment otherwise 0 
+*/
 int is_blank_or_comment(const char *line) {
     int i=0;
+
+    /* skip spaces and tabs */
     while (line[i]==' '||line[i]=='\t') {
         i++;
     }
+    
+    /* Empty line */
     if (line[i]=='\n'||line[i]=='\0') {
         return 1;
     }
+    
+    /* comment line starts with ';' */
     if (line[i]==';') {
         return 1;
     }
     return 0;
 }
+
+/*
+* Detect assembly line type 
+* line - source line 
+* return - detected line type
+*/
+
 int detect_line_type(char *line) {
     char temp[MAX_LINE_LENGTH];
     char *token;
@@ -49,6 +75,8 @@ int detect_line_type(char *line) {
     token = strtok(temp, " \t\n");
     if (token ==NULL) {
         return LINE_EMPTY; }
+    
+    /* skip label if exists */
     if(strlen(token)> 0 && token[strlen(token)-1] == ':') {
         token = strtok(NULL," \t\n");
         if (token ==NULL) {
@@ -67,11 +95,21 @@ int detect_line_type(char *line) {
     if (strcmp(token,".string") == 0) {
         return LINE_STRING;
     }
+    
+    /* Instruction line */
     if (findInstruction(token) != NULL) {
         return LINE_INSTRUCTION;
     }
     return LINE_ERROR;
 }
+
+/*
+* Parse instruction operands 
+* operands_line - operands string
+* op1 - first operand 
+* op2 - second operand 
+* count - number of operands found
+*/
 void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     char temp [MAX_LINE_LENGTH];
     char *token;
@@ -82,6 +120,8 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
         return;
     }
     strcpy(temp,operands_line);
+    
+    /* Parse the first operand  */
     token=strtok(temp,",");
     if (token==NULL) {
         return;
@@ -89,6 +129,8 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     strcpy(op1,token);
     trim_spaces(op1);
     (*count)++;
+
+    /* Parse the second operand */
     token=strtok(NULL,",");
     if (token==NULL) {
         return;
@@ -96,6 +138,8 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     strcpy(op2,token);
     trim_spaces(op2);
     (*count)++;
+
+    /* Check if there are extra operands */
     token = strtok(NULL, ",");
     if (token != NULL) {
         *count = -1; /* למשל סימון שגיאה */
