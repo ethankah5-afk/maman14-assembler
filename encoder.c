@@ -1,6 +1,6 @@
-//
-// Created by ethan on 08/05/2026.
-//
+/* 
+* Created by Ethan and Yakir 
+*/
 #include <string.h>
 #include "encoder.h"
 #include "constants.h"
@@ -9,10 +9,18 @@
 #include "parser.h"
 #include "sec_pass.h"
 
+/*
+* Get operand addressing type 
+* op - operand string 
+* return - operand addressing type 
+*/
+
 int get_addressing_type(char *op) {
+    
     if (op == NULL || op[0] == '\0') {
         return ADDR_INVALID;
     }
+     /* Immediate operands start with # */
     if (op[0] == '#') {
         int num;
         if (!is_valid_number(op+1,&num)) {
@@ -20,26 +28,37 @@ int get_addressing_type(char *op) {
         }
         return ADDR_IMMEDIATE;
     }
+    /* Relative operands start with % */
     if (op[0] == '%') {
         if (is_label_operands(op + 1)) {
             return ADDR_RELATIVE;
         }
         return ADDR_INVALID;
     }
+    /* Register addressing */
     if (findReg(op) != -1) {
         return ADDR_REGISTER;
     }
+      /*  Direct label addressing */
     if (is_label_operands(op)) {
         return ADDR_DIRECT;
     }
     return ADDR_INVALID;
 }
+
+  /* 
+  * Get ARE for code word 
+  * word - code word 
+  * externs - extern labels table 
+  *return - ARE character 
+  */
 char get_are_char(CodeWord *word, NameRefTable *externs) {
     char *name;
     if (word->label == NULL) {
         return 'A';
     }
     name = word->label;
+      /* Remove % before label check */
     if (name[0] == '%'){
             name++;
     }
@@ -48,6 +67,7 @@ char get_are_char(CodeWord *word, NameRefTable *externs) {
     }
     return 'R';
 }
+
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count) {
     unsigned short word = 0;
     int src_type=0;
