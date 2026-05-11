@@ -1,6 +1,6 @@
-//
-// Created by ethan on 04/05/2026.
-//
+/*
+* Created by Ethan and Yakir 
+*/
 
 #ifndef ASSEMBLERPROJECT_ERRORS_H
 #define ASSEMBLERPROJECT_ERRORS_H
@@ -9,13 +9,12 @@
 
 /* Represents an error with an associated error ID and error message */
 typedef struct Error {
-    int error_id;     /* Unique identifier for the error */
-    char *error_msg;  /* Error message associated with the error */
+    int error_id;     /* Error code identifier */
+    char *error_msg;  /* Error message text */
 } Error;
 
-/* Represents error codes for various types of errors */
+   /* Error codes used across the assembler project  */
 typedef enum ERROR_CODES {
-    /* The following errors are macro related or general */
     ERROR_0 = 0,
     ERROR_1,
     ERROR_2,
@@ -57,10 +56,17 @@ typedef enum ERROR_CODES {
     ERROR_38,
 } ERROR_CODES;
 
-
+/* 
+* Print external error with file location  
+* error_code- error code number 
+* file - file location 
+*/
 void print_external_error(int error_code, location file);
 
-
+/* 
+* Print internal system error 
+* error_code - error code number
+*/
 void print_internal_error(int error_code);
 
 #endif
