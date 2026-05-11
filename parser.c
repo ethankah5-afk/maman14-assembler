@@ -142,41 +142,62 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count) {
     /* Check if there are extra operands */
     token = strtok(NULL, ",");
     if (token != NULL) {
-        *count = -1; /* למשל סימון שגיאה */
+        *count = -1; 
     }
 }
+
+/* 
+* Parse .data values
+* operands - data operands string 
+* data_img - data image
+* line_num - current line number 
+* DC - data counter 
+* error_code - returned error code 
+* return -status of the code
+*/
 int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC, ERROR_CODES *error_code){
     char *p;
     char *endptr;
     long num;
     p = operands;
+
+    /* Skip leading spaces */
     while (*p == ' ' || *p == '\t') {
         p++;
     }
+    
+    /* Missing .data arguments */
     if (*p == '\0' || *p == '\n') {
-        *error_code = ERROR_20; /* no .data arguments */
+        *error_code = ERROR_20; 
         return 0;
     }
     while (*p != '\0' && *p != '\n') {
         while (*p == ' ' || *p == '\t') {
             p++;
         }
+        /* too many commas / comma in wrong place */
         if (*p == ',') {
-            *error_code = ERROR_24; /* too many commas / comma in wrong place */
+            *error_code = ERROR_24; 
             return 0;
         }
         num = strtol(p, &endptr, 10);
+        
+        /* not a number */
         if (p == endptr) {
-            *error_code = ERROR_31; /* not a number */
+            *error_code = ERROR_31; 
             return 0;
         }
+        
+        /* Number is out of range */
         if (num < -2048 || num > 2047) {
-            *error_code = ERROR_37; /* out of range */
+            *error_code = ERROR_37; 
             return 0;
         }
         while (*endptr == ' ' || *endptr == '\t') {
             endptr++;
         }
+        
+        /* Last number in the line */
         if (*endptr == '\0' || *endptr == '\n') {
             if (!add_code_word(data_img, (unsigned short)num, NULL, line_num)) {
                 *error_code = ERROR_1;
@@ -185,6 +206,8 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
             (*DC)++;
             return 1;
         }
+        
+        /* Missing a comma between numbers */
         if (*endptr != ',') {
             *error_code = ERROR_27;
             return 0;
@@ -193,6 +216,8 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
         while (*endptr == ' ' || *endptr == '\t') {
             endptr++;
         }
+        
+        /* Comma after last number */
         if (*endptr == '\0' || *endptr == '\n') {
             *error_code = ERROR_32;
             return 0;
@@ -205,7 +230,14 @@ int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC
         p = endptr;
     }
     return 1;
-}
+}   
+
+/*
+* check if the number is valid 
+* token - number string
+* value - number
+* return - 1 if number is valid otherwise 0 
+*/
 int is_valid_number(const char *token, int *value) {
     char *endptr;
     long num;
@@ -213,15 +245,27 @@ int is_valid_number(const char *token, int *value) {
         return 0;
     }
     num = strtol(token, &endptr, 10);
+    
+    /* Not Valid chracters after number */
     if (*endptr != '\0') {
         return 0;
     }
+    /* Number is out of the allowed range */
     if (num<-2048||num>2047){
         return 0;
     }
     *value= (int)num;
     return 1;
 }
+
+/* 
+* Validate label declaration 
+* label_name - label name 
+* table - labels table
+* macro_table - macros table
+* macro_count - number of macros 
+* return - 1 if valid otherwise 0
+*/
 int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,int macro_count){
     int i;
     if (label_name == NULL) {
@@ -230,12 +274,15 @@ int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,i
     if (label_name[0] == '\0') {
         return 0;
     }
+    /* Maximum label length is 31 */
     if (strlen(label_name) > 31) {
         return 0;
     }
+    /* Label has to start with a latter */
     if (!isalpha((unsigned char)label_name[0])) {
         return 0;
     }
+    /* Remaining characters must be only letters or numbers */
     for (i = 1; label_name[i] != '\0'; i++) {
         if (!isalnum((unsigned char)label_name[i])) {
             return 0;
@@ -245,20 +292,32 @@ int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,i
     if (table != NULL && findLabel(table, label_name) != -1) {
         return 0;
     }
+    /* Label name is already used for a macro name */
     if (find_macro(macro_table, macro_count, label_name) != -1) {
         return 0;
-    }
+    } 
+    /* label name is one of the instruction names */
     if (findInstruction(label_name) != NULL) {
         return 0;
     }
+    /* label name conflicts with register */
     if (findReg(label_name)!= -1) {
         return  0;
     }
+
+    /* label name is one of the directive names  */
     if (strcmp(label_name,".data")==0|| strcmp(label_name,".string")==0 || strcmp(label_name, ".extern")==0 || strcmp(label_name,".entry")==0) {
         return 0;
     }
     return 1;
 }
+
+
+/* 
+* Validate label operand 
+* label_name - label name 
+* return - 1 if valid otherwise 0
+*/
 int is_label_operands(char *label_name){
     int i;
     if (label_name == NULL) {
@@ -267,23 +326,30 @@ int is_label_operands(char *label_name){
     if (label_name[0] == '\0') {
         return 0;
     }
-    if (strlen(label_name) > 30) {
+     /* Maximum label length is 31 */
+    if (strlen(label_name) > 31) {
         return 0;
     }
+     /* Label operand has to start with a latter */
     if (!isalpha((unsigned char)label_name[0])) {
         return 0;
     }
+    
+     /* Remaining characters must be only letters or numbers */
     for (i = 1; label_name[i] != '\0'; i++) {
         if (!isalnum((unsigned char)label_name[i])) {
             return 0;
         }
     }
+    /* label operand name is one of the instruction names */
     if (findInstruction(label_name) != NULL) {
         return 0;
     }
+     /* label operand name conflicts with register */
     if (findReg(label_name)!= -1) {
         return  0;
     }
+    /* label operand name is one of the directive names  */
     if (strcmp(label_name,".data")==0|| strcmp(label_name,".string")==0 || strcmp(label_name, ".extern")==0 || strcmp(label_name,".entry")==0) {
         return 0;
     }
