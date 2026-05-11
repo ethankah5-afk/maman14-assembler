@@ -69,4 +69,11 @@ void print_external_error(int error_code, location file);
 */
 void print_internal_error(int error_code);
 
+/* 
+* Get matching error message from error code
+* error_code - error code number 
+* return - matching error message
+*/
+char *get_error_msg(int error_code); 
+
 #endif
