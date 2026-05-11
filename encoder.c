@@ -50,7 +50,7 @@ int get_addressing_type(char *op) {
   * Get ARE for code word 
   * word - code word 
   * externs - extern labels table 
-  *return - ARE character 
+  * return - ARE character 
   */
 char get_are_char(CodeWord *word, NameRefTable *externs) {
     char *name;
@@ -309,7 +309,7 @@ int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_c
 * labels - labels table 
 * code_img - code image 
 * IC - instruction counter 
-* marco_table - macros table 
+* macro_table - macros table 
 * macro_count - number of macros 
 */
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count){
