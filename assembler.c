@@ -8,6 +8,12 @@
 #include "main_struct.h"
 #include "pre_proc.h"
 
+/* 
+* Main function of the assembler project 
+* argc - number of command line arguments
+* argv - command line arguments array 
+*/
+
 int main(int argc, char *argv[]) {
     macro_node *macro_table=NULL;
     int macro_count=0;
