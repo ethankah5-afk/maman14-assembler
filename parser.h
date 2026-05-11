@@ -43,7 +43,7 @@ void parse_operands(char *operands_line, char *op1, char *op2, int *count);
 * line_num - current line number 
 * DC - data counter 
 * error_code - returned error code 
-* return -status of the code
+* return - status code
 */
 int parse_data_values(char *operands, CodeImage *data_img, int line_num, int *DC, ERROR_CODES *error_code);
 
