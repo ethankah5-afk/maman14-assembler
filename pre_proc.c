@@ -120,7 +120,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
         strcpy(str_copy,str);
         trim_spaces(str_copy);
 
-        / *Detect mcroend line */
+        /* Detect mcroend line */
         if (strncmp(str_copy,"mcroend",7)==0) {
             p=str_copy+7;
             while (*p==' '||*p=='\t') {
