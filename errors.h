@@ -58,7 +58,7 @@ typedef enum ERROR_CODES {
 
 /* 
 * Print external error with file location  
-* error_code- error code number 
+* error_code - error code number 
 * file - file location 
 */
 void print_external_error(int error_code, location file);
