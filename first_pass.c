@@ -248,6 +248,16 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
     (*DC)++;
     return 1;
 }
+
+/* 
+*Initialize first pass memory structures
+* labels - labels table 
+* code_img - code image 
+* data_img - data image 
+* externs - extern labels table 
+* entries - entries table 
+* return - 1 if success if not 0 
+*/
 int init_first_pass_memory(LabelTable *labels,
                            CodeImage *code_img,
                            CodeImage *data_img,
@@ -285,6 +295,14 @@ int init_first_pass_memory(LabelTable *labels,
 
     return 1;
 }
+/* 
+* Free first pass memory structures
+* labels - labels table 
+* code_img - code image 
+* data_img - data image 
+* externs - extern labels table 
+* entries - entries table 
+*/
 void free_first_pass_memory(LabelTable *labels,
                             CodeImage *code_img,
                             CodeImage *data_img,
@@ -298,16 +316,32 @@ void free_first_pass_memory(LabelTable *labels,
 }
 
 
-
+/* 
+* Update data labels address after first pass
+* labels - labels table 
+* IC - final instruction counter
+*/
 void update_data_labels(LabelTable *labels, int IC) {
     int i;
     for (i=0; i<labels->count;i++) {
+        /* updaate only data labels */
         if (labels->arr[i].is_data) {
             labels->arr[i].address+=IC;
         }
     }
 }
-
+/* 
+* Handle .extern 
+* line - source line
+* line_num - current line number 
+* file_name - source file name 
+* labels - labels table 
+* externs - extern label name 
+* label_name - extern label name 
+* macro_table - macros table 
+* macro_count - number of macros 
+* return - status of the code
+*/
 int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *labels, NameRefTable *externs, char *label_name,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char *token;
@@ -318,6 +352,8 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
     token = strtok(temp," \t\n");
     if (token == NULL) {
         return 0; }
+    
+    /* Labels before .extern are not legal */
     if (token[strlen(token) -1] == ':') {
         print_external_error(ERROR_28, loc);
         return 0; }
@@ -329,14 +365,15 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
         print_external_error(ERROR_20, loc);
         return 0;
     }
-
+    /* Validate extern label */
     if(!is_valid_label(token,labels,macro_table,macro_count)) {
         print_external_error(ERROR_28, loc);
         return 0; }
 
     strcpy(label_name, token);
     token = strtok(NULL, " \t\n");
-
+    
+    /* Extra text after extern label */
     if (token!=NULL) {
         print_external_error(ERROR_18, loc);
         return 0; }
@@ -349,6 +386,8 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
         print_internal_error(ERROR_1);
         return -1;
     }
+    
+    /* Mark label as external */
     labels->arr[labels->count - 1].is_extern = 1;
     if (!add_name_ref(externs, label_name, line_num)) {
         print_internal_error(ERROR_1);
