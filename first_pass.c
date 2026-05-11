@@ -59,6 +59,7 @@ int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *e
         print_external_error(ERROR_18, loc);
         return 0;
     }
+  /* Save entry label */
     if (!add_name_ref(entries, token, line_num)) {
         print_internal_error(ERROR_1);
         return -1;
@@ -115,6 +116,8 @@ int handle_data_line(char *line, int line_num,char *file_name, LabelTable *label
         print_external_error(ERROR_38, loc);
         return 0;
     } 
+    
+    /* Add label before data values */
     if (has_label) {
 
         if (findLabel(labels, label_name) != -1) {
@@ -208,12 +211,13 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
             return -1;
         }
     }
+    /* Find opening quote */
     start_quote = strchr(line, '"');
     if (start_quote == NULL) {
            print_external_error(ERROR_33, loc);
         return 0;
     }
-
+     /* Find closing quote */
     end_quote = strrchr(line, '"');
     if (end_quote == NULL || end_quote == start_quote) {
         print_external_error(ERROR_33, loc);
@@ -263,6 +267,7 @@ int init_first_pass_memory(LabelTable *labels,
                            CodeImage *data_img,
                            NameRefTable *externs,
                            NameRefTable *entries) {
+    
     if (!initLabelTable(labels)) {
         return 0;
     }
@@ -277,14 +282,16 @@ int init_first_pass_memory(LabelTable *labels,
         free_code_image(code_img);
         return 0;
     }
-
+    
+  /* Initialize  extern labels table */
     if (!init_name_ref_table(externs)) {
         free_label_table(labels);
         free_code_image(code_img);
         free_code_image(data_img);
         return 0;
     }
-
+    
+    /* Initialize entries table */
     if (!init_name_ref_table(entries)) {
         free_label_table(labels);
         free_code_image(code_img);
@@ -377,7 +384,8 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
     if (token!=NULL) {
         print_external_error(ERROR_18, loc);
         return 0; }
-
+    
+    /* Prevent duplicate label definitions */
     if (findLabel(labels, label_name) != -1) {
         print_external_error(ERROR_36, loc);
         return 0;
@@ -389,6 +397,7 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
     
     /* Mark label as external */
     labels->arr[labels->count - 1].is_extern = 1;
+    /* Save extern reference */
     if (!add_name_ref(externs, label_name, line_num)) {
         print_internal_error(ERROR_1);
         return -1;
