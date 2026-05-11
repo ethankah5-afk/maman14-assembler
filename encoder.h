@@ -15,12 +15,45 @@
   */
 char get_are_char(CodeWord *word, NameRefTable *externs);
 
+ /* 
+  * Build first instruction word 
+  * inst - instruction information 
+  * op1 - source operand 
+  * op2 - destination operand 
+  * op_count - number of operands 
+  * return - encoded first word 
+  */
 unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_count);
+
+ /* 
+ * Encode immediate operand 
+ * op - operand string 
+ * return - encoded immediate value 
+ */
 unsigned short encode_immediate(char *op);
+
+
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count);
+
+/* 
+* Handle operand encoding 
+* op - operand string 
+* line_num - current line number 
+* file_name - source file name 
+* labels - labels table 
+* code_img - code image 
+* IC - instruction counter  
+ */
 int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC);
 int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count);
 int is_one_of(int type, int a, int b, int c, int d);
+
+
+/* 
+ * Encode register operand 
+ * op - register operand 
+ * return - encoded register value
+ */
 unsigned short encode_register(char *op);
 
 /*
