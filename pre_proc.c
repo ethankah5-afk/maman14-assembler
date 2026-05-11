@@ -210,6 +210,14 @@ int find_macro(macro_node *table, int table_size, char *name) {
     }
     return -1;
 }
+
+/*
+* Run preprocessor on assembly file
+* file_name - source file name
+* macro_table - returned macros table 
+* macro_count - returned number of macros
+* return - 1 if succes if not 0
+*/
 int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
     FILE *fp_in, *fp_out;
     char line[MAX_LINE_LENGTH];
@@ -231,6 +239,8 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
         print_internal_error(ERROR_8);
         return 0;
     }
+    /* Create .am file name*/
+    
     am_file = add_new_file(file_name, ".am");
     if (am_file==NULL) {
         print_internal_error(ERROR_1);
@@ -244,18 +254,25 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
         free(am_file);
         return 0;
     }
+    /* Read source file line by line */
     while (fgets(line,MAX_LINE_LENGTH , fp_in)) {
         line_count++;
         file_location.file_name = file_name;
         file_location.line_num = line_count;
         strcpy(line_copy, line);
+
+        /* check if line defines a macro */
         macro_status=is_macro(line_copy,&mcro_name,&error_code);
         if (macro_status==-1) {
             print_external_error(error_code,file_location);
             error_found=1;
             continue;
         }
+        /* Handle macro definition */
         if (macro_status==1) {
+
+            /* Validate macro name*/
+            
             if (findInstruction(mcro_name) != NULL ||
                 findReg(mcro_name) != -1 ||
                 strcmp(mcro_name, ".data") == 0 ||
@@ -266,7 +283,8 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
                 print_external_error(ERROR_16, file_location);
                 error_found = 1;
                 continue;
-            }
+            } 
+          /* Save current file position */  
             if (fgetpos(fp_in, &pos)!=0) {
                 print_internal_error(ERROR_11);
                 fclose(fp_in);
@@ -275,6 +293,8 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
                 free(am_file);
                 return 0;
             }
+            
+            /* Save macro content */
             content = save_macro_content(fp_in, &pos, &line_count,&error_code);
             if (content == NULL) {
                 if (error_code==ERROR_1||error_code==ERROR_11) {
@@ -290,7 +310,7 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
                 continue;
             }
 
-            /* הוסף לטבלה */
+          /* Increase macro table size */
             temp = (macro_node *)realloc(table, (table_size + 1) * sizeof(macro_node));
             if (temp==NULL) {
                 print_internal_error(ERROR_1);
@@ -304,6 +324,8 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
             table = temp;
             table[table_size].name = NULL;
             table[table_size].content = NULL;
+
+            /* Allocate memory for macro name */
             table[table_size].name = (char *)malloc(strlen(mcro_name) + 1);
             if (table[table_size].name==NULL) {
                 print_internal_error(ERROR_1);
@@ -314,23 +336,27 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
                 free(am_file);
                 return 0;
             }
+            /* Save macro name */
             strcpy(table[table_size].name, mcro_name);
+            /* Save macro content */
             table[table_size].content = content;
             table_size++;
             continue;
         }
 
-        /* בדוק אם השורה היא קריאה למאקרו */
+   
         found = 0;
+        /* check if line is a mcro call */
         for (i = 0; i < table_size; i++) {
             if (is_macro_call(line,table[i].name)!=0) {
+                /* expand macro into .am file */
                 fprintf(fp_out, "%s", table[i].content);
                 found = 1;
                 break;
             }
         }
 
-        /* שורה רגילה */
+        /* Regular line */
         if (!found) {
             fprintf(fp_out, "%s", line);
         }
