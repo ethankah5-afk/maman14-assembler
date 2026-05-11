@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "main_struct.h"
 
-/* Table containing all the assembler instruction */
+/* Table containing all the assembler instructions */
 Instruction instructionTable[] = {
    {"mov",  0,  0, 2},
    {"cmp",  1,  0, 2},
