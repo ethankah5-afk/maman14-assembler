@@ -1,13 +1,15 @@
-//
-// Created by ethan on 04/05/2026.
+/* 
+* Created by Ethan and Yakir
+*/
 #include <stdio.h>
 #include "errors.h"
 #include "main_struct.h"
 
 
-/* The Following array specifies the error code numbers and the corresponding error message.
- * Missing lines are intentionally left blank for future error codes
- * */
+/* 
+* Array containing all project error messages
+* Each error code matches its message
+ */
 Error errors[] = {
         {ERROR_0,  "No Error"},
         {ERROR_1,  "Failed to allocate memory dynamically (also refers to creating files)"},
@@ -51,9 +53,17 @@ Error errors[] = {
 
 };
 
+/* 
+* Get matching error message from error code
+* error_code - error code number 
+* return - matching error message
+*/
+
 char *get_error_msg(int error_code){
     int i;
     int errors_count;
+        
+/* calculate number of errors in array  */
     errors_count = (int)(sizeof(errors) / sizeof(errors[0]));
     for (i = 0; i < errors_count; i++) {
         if (errors[i].error_id == error_code) {
@@ -62,14 +72,22 @@ char *get_error_msg(int error_code){
     }
     return "Unknown error";
 }
+/* 
+* Print internal system error 
+* error_code - error code number
+*/
 
 void print_internal_error(int error_code)
 {
     printf("[ERROR %d] %s\n", error_code, get_error_msg(error_code));
 }
-
+/* 
+* Print external error with file location  
+* error_code- error code number 
+* file - file location 
+*/
 void print_external_error(int error_code, location file)
 {
     printf("[ERROR %d] In %s at line %d: %s\n" ,error_code,file.file_name,file.line_num,get_error_msg(error_code));
 }
-//
+
