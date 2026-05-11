@@ -33,7 +33,7 @@ int findLabel(LabelTable *table, char *name);
 int addLabel(LabelTable *table, char *name, int address, int is_data, int line_defined);
 
 /* 
-* Add code word to to code image
+* Add code word to code image
 * img - code image 
 * value - machine word value 
 * label - unresolved label 
