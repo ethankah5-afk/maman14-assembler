@@ -1,4 +1,6 @@
- */ Created by Ethan and Yakir  */
+ / *
+*Created by Ethan and Yakir
+*/
 
 #ifndef ASSEMBLERPROJECT_CONVERSION_H
 #define ASSEMBLERPROJECT_CONVERSION_H
@@ -33,4 +35,4 @@ char *find_first_data_number(char *line);
 */
 char *convert_word_to_hex(unsigned short word,char res[4]);
 
-#endif  */  ASSEMBLERPROJECT_CONVERSION_H */
+#endif  / * ASSEMBLERPROJECT_CONVERSION_H */
