@@ -301,6 +301,17 @@ int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_c
             return 0;
     }
 }
+/*  
+* Handle instruction line during the first pass
+* line - source line 
+* line_num - current line number 
+* file_name - file name 
+* labels - labels table 
+* code_img - code image 
+* IC - instruction counter 
+* marco_table - macros table 
+* macro_count - number of macros 
+*/
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count){
     char temp[MAX_LINE_LENGTH];
     char *token;
@@ -325,7 +336,7 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
     if (token == NULL) {
         return 0;
     }
-    /* אם יש label בתחילת שורה */
+    /* check if line starts with label */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,labels,macro_table,macro_count)) {
@@ -359,6 +370,8 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
     operands_line = strtok(NULL, "\n");
     op1[0] = '\0';
     op2[0] = '\0';
+    
+     /*  Validate comma placement before parsing  */
     if (operands_line != NULL) {
         if (strstr(operands_line, ",,") != NULL) {
             print_external_error(ERROR_24, loc);
@@ -377,7 +390,9 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
         print_external_error(ERROR_21,loc);
         return 0;
     }
+     /* Parse operands from instruction line */ 
     parse_operands(operands_line,op1,op2,&op_count);
+    
     if (op_count==-1) {
         print_external_error(ERROR_18, loc);
         return 0;
@@ -386,7 +401,7 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
         print_external_error(ERROR_20, loc);
         return 0;
     }
-
+     /* Instruction with source and destination operands */ 
     if (op_count ==2) {
         src_type = get_addressing_type(op1);
         dest_type = get_addressing_type(op2);
@@ -399,6 +414,7 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
             return 0;
         }
     }
+    /* Instruction with single operand */
     else if (op_count ==1) {
         dest_type = get_addressing_type(op1);
         if (dest_type == ADDR_INVALID) {
@@ -410,12 +426,15 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
             return 0;
         }
     }
+      /* Instruction without operands */     
     else{
         if (!is_legal_addressing(inst,0,0,op_count)) {
              print_external_error(ERROR_19, loc);
             return 0;
         }
     }
+    
+    /* Encode first instruction word */
     first_word=build_first_word(inst,op1,op2,op_count);
     if (!add_code_word(code_img,first_word,NULL,line_num)){
         print_internal_error(ERROR_1);
@@ -426,10 +445,11 @@ int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *
     if (op_count==0) {
         return 1;
     }
+     /* Encode first operand */
     if (op_count==1) {
         return handle_one_operand(op1,line_num,file_name,labels,code_img,IC);
     }
-
+     /* Encode second operand */
     if(op_count==2) {
         status=handle_one_operand(op1,line_num,file_name,labels,code_img,IC);
         if (status==-1) {
