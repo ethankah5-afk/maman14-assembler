@@ -194,7 +194,7 @@ int  init_name_ref_table(NameRefTable *table) {
 int add_name_ref(NameRefTable *table, const char *name, int line) {
     NameRef *temp;
 
-     */ increase table size if is needed */
+     /* increase table size if is needed */
     if (table->count == table->capacity) {
         table->capacity *= 2;
         temp = (NameRef *)realloc(table->arr, table->capacity * sizeof(NameRef));
