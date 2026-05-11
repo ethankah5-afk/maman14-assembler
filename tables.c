@@ -69,7 +69,7 @@ int addLabel(LabelTable *table, char *name, int address, int is_data, int line_d
         table->arr = temp;
     } 
 
-    /* label length limit */
+    /* Label length limit */
     if (strlen(name)>31) {
         return 0;
     } 
@@ -123,7 +123,7 @@ int init_code_image(CodeImage *img) {
 int add_code_word(CodeImage *img, unsigned short value, const char *label, int line) {
     CodeWord *temp;
 
-    /* add to code image size if needed */
+    /* Increase code image size if needed * */
     if (img->count == img->capacity) {
         img->capacity *= 2;
         temp = (CodeWord *)realloc(img->arr, img->capacity * sizeof(CodeWord));
@@ -173,7 +173,7 @@ void free_code_image(CodeImage *img) {
 /* 
 * Initialize name references table
 * table -  name references table
-* return - 1 success otherwise 0 
+* return - 1 if success otherwise 0 
 */
 int  init_name_ref_table(NameRefTable *table) {
     table->count = 0;
@@ -188,8 +188,8 @@ int  init_name_ref_table(NameRefTable *table) {
 * Add name to reference table
 * table - name references table
 * name - referenced name 
-*line - assembly line number
-* return -  1 success otherwise 0 
+* line - assembly line number
+* return -  1 if success otherwise 0 
  */
 int add_name_ref(NameRefTable *table, const char *name, int line) {
     NameRef *temp;
