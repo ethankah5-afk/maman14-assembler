@@ -29,7 +29,7 @@ int mark_entry_labels(LabelTable *labels, NameRefTable *entries, char *file_name
     /* Go over all entry labels   */ 
     for(i=0; i<entries->count;i++) {
         lbl = find_label_by_name(labels, entries->arr[i].name);
-        /* Entry label has no defintion */ 
+        /* Entry label has no definition */ 
         if(lbl ==NULL) {
             print_external_error(ERROR_22,loc);
             error_found=1;
@@ -70,7 +70,7 @@ Label *find_label_by_name(LabelTable *labels, const char *name) {
 * check if name belongs to extern label
 * externs - extern labels table
 * name - label name
-* return - 1 if extern otherwise
+* return - 1 if extern otherwise 0 
 */ 
 int is_extern_name(NameRefTable *externs, const char *name) {
     int i;
@@ -151,7 +151,7 @@ int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *e
     int i;
     int error_found =0;
     
-    /* resolve evrey code word  */ 
+    /* resolve every code word  */ 
     for(i=0; i<code_img->count; i++) {
         if (!resolve_one_code_word(&code_img->arr[i],i,labels, externs, file_name)) {
                error_found = 1;
@@ -160,8 +160,7 @@ int resolve_code_labels(CodeImage *code_img, LabelTable *labels, NameRefTable *e
     return !error_found;
 }
 
-/*
- 
+/* 
 * Execute second assembler pass
 * file_name - source file name
 * labels - labels table
