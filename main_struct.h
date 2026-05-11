@@ -77,13 +77,13 @@ typedef struct CodeImage {
     int capacity;
 } CodeImage;
 
-/* Represents entry or extern label refernce */
+/* Represents entry or extern label reference */
 typedef struct NameRef {
     char *name;
     int assembly_line;
 } NameRef;
 
-/* Dynamic table of entry or extern label refernces  */
+/* Dynamic table of entry or extern label references  */
 typedef struct NameRefTable {
     NameRef *arr;
     int count;
