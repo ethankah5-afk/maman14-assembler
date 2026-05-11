@@ -7,7 +7,11 @@
 #include "main_struct.h"
 #include "conversion.h"
 
-/* Convert register name to its binary representaion */
+/* 
+* Convert register name to its binary representaion
+* reg_before - register name 
+* return - register binary value 
+*/
 unsigned short regToShort(char *reg_before) {
     int num_of_reg=findReg(reg_before);
     
@@ -19,7 +23,11 @@ unsigned short regToShort(char *reg_before) {
     return (unsigned short)(1<<num_of_reg);
 }
 
-/* Convert a 12 bit value into a binary string */
+/* 
+* Convert a 12 bit value into a binary string
+* value - number to convert 
+* binary - output
+*/
 
 void toBinary12(unsigned short value, char *binary){
     int i;
@@ -34,7 +42,11 @@ void toBinary12(unsigned short value, char *binary){
     }
     binary[12] = '\0';
 }
-/* find the first number after .data */
+/* 
+* find the first number after .data
+* line - source line 
+* return - pointer to the frist data number 
+*/
 char *find_first_data_number(char *line){
     char *p = strstr(line, ".data");
     if (p == NULL) {
@@ -48,7 +60,12 @@ char *find_first_data_number(char *line){
     }
     return p;
 }
-/* Convert a machine word into a hexadecimal string */
+/* 
+* Convert a machine word into a hexadecimal string
+* word - machine to to convert 
+* res - output hexadecimal string 
+* return - pointer to result 
+*/
 
 char *convert_word_to_hex(unsigned short word,char res[4]) {
     char hex_table[] = "0123456789ABCDEF";
