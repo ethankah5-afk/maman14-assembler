@@ -32,7 +32,17 @@ unsigned short build_first_word(Instruction *inst, char *op1, char *op2, int op_
  */
 unsigned short encode_immediate(char *op);
 
-
+/*  
+* Handle instruction line during the first pass
+* line - source line 
+* line_num - current line number 
+* file_name - file name 
+* labels - labels table 
+* code_img - code image 
+* IC - instruction counter 
+* marco_table - macros table 
+* macro_count - number of macros 
+*/
 int handle_instruction_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,int *IC,macro_node *macro_table,int macro_count);
 
 /* 
