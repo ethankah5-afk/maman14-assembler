@@ -57,10 +57,10 @@ char *add_new_file(char *file_name, char *ending) {
 
 /* 
 * check if line defines a macro
-*line_num - source line
-*mcro_name - returned macro name
-*error_code - returned error code
-*return - status code
+* line_num - source line
+* mcro_name - returned macro name
+* error_code - returned error code
+* return - status code
 */
 
 int is_macro(char *line_num,char **mcro_name,ERROR_CODES *error_code) {
@@ -120,7 +120,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
         strcpy(str_copy,str);
         trim_spaces(str_copy);
 
-        /*Detect mcroend line */
+        / *Detect mcroend line */
         if (strncmp(str_copy,"mcroend",7)==0) {
             p=str_copy+7;
             while (*p==' '||*p=='\t') {
@@ -155,7 +155,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
     }
     mcro[0]= '\0';
 
-    /* Copy macro lines*/
+    /* Copy macro lines */
     while (fgets(str,MAX_LINE_LENGTH,fp)!=NULL &&strncmp(str,"mcroend",7)!=0) {
         strcat(mcro,str);
     }
@@ -163,7 +163,7 @@ char* save_macro_content(FILE *fp, fpos_t* pos, int *line_count,ERROR_CODES *err
 }
 
 /*
-*check if line is macro call 
+* check if line is macro call 
 * line - source line
 * macro_name - macro name
 * return - 1 if is macro call otherwise 0 
@@ -239,7 +239,7 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
         print_internal_error(ERROR_8);
         return 0;
     }
-    /* Create .am file name*/
+    /* Create .am file name */
     
     am_file = add_new_file(file_name, ".am");
     if (am_file==NULL) {
@@ -271,7 +271,7 @@ int run_preproc(char *file_name,macro_node **macro_table,int *macro_count) {
         /* Handle macro definition */
         if (macro_status==1) {
 
-            /* Validate macro name*/
+            /* Validate macro name */
             
             if (findInstruction(mcro_name) != NULL ||
                 findReg(mcro_name) != -1 ||
