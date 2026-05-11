@@ -1,4 +1,4 @@
- / *
+ /*
 *Created by Ethan and Yakir
 */
 
@@ -35,4 +35,4 @@ char *find_first_data_number(char *line);
 */
 char *convert_word_to_hex(unsigned short word,char res[4]);
 
-#endif  / * ASSEMBLERPROJECT_CONVERSION_H */
+#endif  /* ASSEMBLERPROJECT_CONVERSION_H */
