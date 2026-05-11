@@ -232,9 +232,23 @@ int handle_one_operand(char *op,int line_num,char *file_name,LabelTable *labels,
     print_external_error(ERROR_19, loc);
     return 0;
 }
+/* 
+* Check if value matches one of the given options 
+* type - value to check 
+* return - if found 1, if not found 0 
+ */
 int is_one_of(int type, int a, int b, int c, int d) {
     return (type == a || type == b || type == c || type == d);
 }
+
+/* 
+* Check if instruction addressing is legal 
+* inst - instruction format
+* src_type - source operand type 
+* dest_type - destination operand type 
+* return - 1 if legal, if not legal 0
+ */
+
 int is_legal_addressing(Instruction *inst, int src_type, int dest_type, int op_count) {
     if (inst == NULL) {
         return 0;
