@@ -16,7 +16,7 @@ Error errors[] = {
         {ERROR_2,  ".as file name is missing"},
         {ERROR_3,  "file name is too long"},
         {ERROR_4,  "file does not exist"},
-        {ERROR_5,  ".am file is missing"},//
+        {ERROR_5,  ".am file is missing"},
         {ERROR_6,  "Line is too long"},
         {ERROR_7,  "Failed to open output file for writing"},
         {ERROR_8,  "Failed to open input file for reading"},
@@ -24,7 +24,7 @@ Error errors[] = {
         {ERROR_10, "Extra text after macro name definition"},
         {ERROR_11, "Failed to set or get position in file"},
         {ERROR_12, "Extra text after mcroend"},
-        {ERROR_13, "Macro is defined more than once"},//
+        {ERROR_13, "Macro is defined more than once"},
         {ERROR_14, "Failed to copy file during macros expansion"},
         {ERROR_15, "Macros expansion in an .as file failed"},
         {ERROR_16, "Macro has an illegal name"},
