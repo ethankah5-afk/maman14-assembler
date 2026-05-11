@@ -234,7 +234,7 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
             return 0;
         }
     }
-    /* Move after opeing quote */
+    /* Move after opening quote */
     start_quote++;
 
     /* Encoding string characters */
@@ -331,7 +331,7 @@ void free_first_pass_memory(LabelTable *labels,
 void update_data_labels(LabelTable *labels, int IC) {
     int i;
     for (i=0; i<labels->count;i++) {
-        /* updaate only data labels */
+        /* update only data labels */
         if (labels->arr[i].is_data) {
             labels->arr[i].address+=IC;
         }
@@ -476,7 +476,7 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     error_found = 0;
     loc.file_name = file_name;
     
-    /* Prepare all tabels and code images for first pass */
+    /* Prepare all tables and code images for first pass */
     if (!init_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries)) {
         print_internal_error(ERROR_1);
         return -1;
@@ -491,7 +491,7 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
         line_num++;
         loc.line_num = line_num;
-        /* Check if line is longer then allowed */
+        /* Check if line is longer than allowed */
         if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 2] != '\n') {
             print_external_error(ERROR_6, loc);
             error_found = 1;
