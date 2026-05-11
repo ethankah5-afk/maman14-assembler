@@ -10,7 +10,7 @@
 * Build output file name with extension 
 * file_name- source file name 
 * ext - output extension 
-* out - output file namw
+* out - output file name
 */
 void make_output_name(char *file_name, char *ext, char *out);
 
@@ -39,7 +39,7 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs);
 * externs - extern labels table 
 * IC - final instruction counter
 * DC -  final data counter 
-* return - 1 if succes if not 0
+* return - 1 if success if not 0
 */
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,int IC, int DC);
 
