@@ -69,14 +69,14 @@ int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *e
 
 /*
 * Handle .data line 
-* line - soruce line 
+* line - source line 
 * line_num - current line number
 * file_name - source file name 
 * labels - labels table 
 * data_img - data image 
 * DC - data counter 
 * table - labels table 
-* marco_table - macros table
+* macro_table - macros table
 * macro_count - number of macros
 * return - status of the code 
 */
