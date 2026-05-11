@@ -1,9 +1,13 @@
+/*
+* Created by Ethan and Yakir
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "constants.h"
 #include "main_struct.h"
 
-
+/* Table containing all the assembler instruction */
 Instruction instructionTable[] = {
    {"mov",  0,  0, 2},
    {"cmp",  1,  0, 2},
@@ -22,12 +26,22 @@ Instruction instructionTable[] = {
    {"rts", 14,  0, 0},
    {"stop",15,  0, 0}
 };
+/* List of Registers */
 char *REGS[] = {"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"};
 
+/* Assembler directives */
 char *DIRECTIVES[] = {".data", ".string", ".extern", ".entry"};
+
+/* 
+* Find instruction by name
+* name - instruction name
+* return - pointer to instruction if found, if not NULL 
+*/
 Instruction* findInstruction(const char *name)
 {
    int i;
+   
+   /* Search in instruction table */
    for (i = 0; i <INSTRUCTIONS_COUNT; i++) {
        if (strcmp(instructionTable[i].name, name) == 0) {
            return &instructionTable[i];
@@ -35,6 +49,12 @@ Instruction* findInstruction(const char *name)
    }
    return NULL;
 }
+
+/* 
+* Find register index by name
+* str - register name 
+* return - register index if found, if not found -1
+*/
 int findReg(char *str) {
     int i;
 
@@ -43,11 +63,11 @@ int findReg(char *str) {
         return -1;
     }
 
-    /* Iterate through the list of known registers and compare the string with each register in the list */
+    /* Search register list */
     for (i = 0; i < REG_COUNT; i++) {
         if (strcmp(str, REGS[i]) == 0) {
             return i; /* Return the index of the matching register */
         }
     }
-    return -1; /* Return -1 if the string does not match any known registers */
+    return -1;  /*  Return -1 if the string does not match any known registers */
 }
