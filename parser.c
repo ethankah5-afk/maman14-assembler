@@ -246,7 +246,7 @@ int is_valid_number(const char *token, int *value) {
     }
     num = strtol(token, &endptr, 10);
     
-    /* Not Valid chracters after number */
+    /* Not Valid characters after number */
     if (*endptr != '\0') {
         return 0;
     }
@@ -278,7 +278,7 @@ int is_valid_label(char *label_name, LabelTable *table,macro_node *macro_table,i
     if (strlen(label_name) > 31) {
         return 0;
     }
-    /* Label has to start with a latter */
+    /* Label has to start with a letter */
     if (!isalpha((unsigned char)label_name[0])) {
         return 0;
     }
@@ -330,7 +330,7 @@ int is_label_operands(char *label_name){
     if (strlen(label_name) > 31) {
         return 0;
     }
-     /* Label operand has to start with a latter */
+     /* Label operand has to start with a letter */
     if (!isalpha((unsigned char)label_name[0])) {
         return 0;
     }
