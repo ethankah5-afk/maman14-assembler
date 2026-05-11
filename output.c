@@ -15,7 +15,7 @@
 * Build output file name with extension 
 * file_name- source file name 
 * ext - output extension 
-* out - output file namw
+* out - output file name
 */
 void make_output_name(char *file_name, char *ext, char *out) {
     char *dot;
@@ -96,7 +96,7 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
     }
     fclose(fp);
     
-    /* Remove empty .ext file if didnt find in the search anything */
+    /* Remove empty .ext file if did not find in the search anything */
     if (!found) {
         remove(ext_name);
     }
@@ -111,7 +111,7 @@ int write_ext_file(char *file_name, CodeImage *code_img,NameRefTable *externs) {
 * externs - extern labels table 
 * IC - final instruction counter
 * DC -  final data counter 
-* return - 1 if succes if not 0
+* return - 1 if success if not 0
 */
 int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,int IC, int DC) {
     FILE *fp;
@@ -142,7 +142,7 @@ int write_ob_file(char *file_name,CodeImage *code_img,CodeImage *data_img,NameRe
             else if ((value_to_print & 3)==ARE_RELOCATABLE){
                 are='R';
             }
-            /* Remove ARE before bits printing*/
+            /* Remove ARE bits before printing*/
             value_to_print=(unsigned short)(value_to_print>>2);
         }
         convert_word_to_hex(value_to_print,out_word);
