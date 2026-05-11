@@ -254,7 +254,7 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
 }
 
 /* 
-*Initialize first pass memory structures
+* Initialize first pass memory structures
 * labels - labels table 
 * code_img - code image 
 * data_img - data image 
@@ -405,12 +405,31 @@ int handle_extern_line(char *line, int line_num,char *file_name, LabelTable *lab
     return 1;
 }
 
+/* 
+* Handle line during first pass
+* line - source line 
+* line_num - current line number 
+* file_name - source file name 
+* labels -labels table 
+* code_img - code image 
+* data_img - data image 
+* externs - extern labels table 
+* entries - entries table 
+* IC - instruction counter 
+* DC - data counter 
+* macro_table - macros table 
+* macro_count - number of macros 
+* return - status of the code
+*/
+
 int handle_first_pass_line(char *line,int line_num,char *file_name,LabelTable *labels,CodeImage *code_img,CodeImage *data_img,NameRefTable *externs,NameRefTable *entries,int *IC,int *DC,macro_node *macro_table,int macro_count) {
     int line_type;
     char extern_label[31];
     location loc;
     loc.file_name = file_name;
     loc.line_num = line_num;
+    
+      /* Decide which handler should process the line */
     line_type=detect_line_type(line);
     switch(line_type) {
         case LINE_EMPTY:
@@ -431,7 +450,13 @@ int handle_first_pass_line(char *line,int line_num,char *file_name,LabelTable *l
             return 0;
     }
 }
-
+/* 
+* Execute first and second assembler passes
+* file_name - source file name 
+* macro_table - macros table 
+* macro_count - number of macros 
+* return - 1 if assembler passes succeeded otherwise 0 
+*/
 int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     FILE *fp;
     char line[MAX_LINE_LENGTH];
@@ -450,6 +475,8 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
     DC = 0;
     error_found = 0;
     loc.file_name = file_name;
+    
+    /* Prepare all tabels and code images for first pass */
     if (!init_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries)) {
         print_internal_error(ERROR_1);
         return -1;
@@ -460,9 +487,11 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
         free_first_pass_memory(&labels, &code_img, &data_img, &externs, &entries);
         return 0;
     }
+    /* Read source file line by line  */
     while (fgets(line, MAX_LINE_LENGTH, fp) != NULL) {
         line_num++;
         loc.line_num = line_num;
+        /* Check if line is longer then allowed */
         if (strlen(line) == MAX_LINE_LENGTH - 1 && line[MAX_LINE_LENGTH - 2] != '\n') {
             print_external_error(ERROR_6, loc);
             error_found = 1;
@@ -475,6 +504,7 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
 
             continue;
         }
+        /* Skip empty lines or comments */
         if (is_blank_or_comment(line)) {
             continue;
         }
@@ -490,6 +520,8 @@ int exe_passes(char *file_name,macro_node *macro_table,int macro_count){
 
     }
     fclose(fp);
+    
+    /* Data labels get final addresses only after IC is known */
     update_data_labels(&labels,IC);
     if (!error_found) {
         if (!exe_sec_pass(file_name,&labels,&code_img,&data_img,&externs,&entries,IC,DC)) {
