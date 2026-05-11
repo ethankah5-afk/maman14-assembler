@@ -1,6 +1,7 @@
-//
-// Created by ethan on 15/03/2026.
-//
+/* 
+* Created by Ethan and Yakir 
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -11,6 +12,16 @@
 #include "tables.h"
 #include "constants.h"
 #include "encoder.h"
+
+/*
+* Handle .entry line 
+* line - source line 
+* line_num - current line number 
+* file_name - source file name 
+* entries - entries table 
+* return - status of the code 
+*/
+
 int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *entries) {
     char temp[MAX_LINE_LENGTH];
     char *token;
@@ -38,11 +49,12 @@ int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *e
         print_external_error(ERROR_20, loc);
         return 0;
     }
-
+    /* Validate entry label */
     if(!is_label_operands(token)) {
         print_external_error(ERROR_23, loc);
         return 0;
     }
+    /* Extra text after label */
     if (strtok(NULL, " \t\n")!=NULL) {
         print_external_error(ERROR_18, loc);
         return 0;
@@ -53,6 +65,20 @@ int handle_entry_line(char *line, int line_num, char*file_name,  NameRefTable *e
     }
     return 1;
 }
+
+/*
+* Handle .data line 
+* line - soruce line 
+* line_num - current line number
+* file_name - source file name 
+* labels - labels table 
+* data_img - data image 
+* DC - data counter 
+* table - labels table 
+* marco_table - macros table
+* macro_count - number of macros
+* return - status of the code 
+*/
 int handle_data_line(char *line, int line_num,char *file_name, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
@@ -70,6 +96,7 @@ int handle_data_line(char *line, int line_num,char *file_name, LabelTable *label
     if (token == NULL) {
         return 0;
     }
+    /* Check if the line starts with a label */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,table,macro_table,macro_count)) {
@@ -87,7 +114,7 @@ int handle_data_line(char *line, int line_num,char *file_name, LabelTable *label
     if (strcmp(token, ".data") != 0) {
         print_external_error(ERROR_38, loc);
         return 0;
-    }
+    } 
     if (has_label) {
 
         if (findLabel(labels, label_name) != -1) {
@@ -104,6 +131,7 @@ int handle_data_line(char *line, int line_num,char *file_name, LabelTable *label
         print_external_error(ERROR_38,loc);
         return 0;
     }
+    /* Move after .data */
     operands+=5;
     status=parse_data_values(operands,data_img,line_num,DC,&error_code);
     if (status==-1) {
@@ -116,6 +144,21 @@ int handle_data_line(char *line, int line_num,char *file_name, LabelTable *label
     }
     return 1;
 }
+
+
+/*
+* Handle .string line
+* line - source line 
+* line_num - current line number 
+* file_name - source file name 
+* labels - labels table 
+* data_img - data image 
+* DC  - data counter 
+* table - labels table 
+* macro_table - macros table 
+* marco_count - number of macros 
+* return - status code 
+*/
 int handle_string_line(char *line, int line_num,char *file_name, LabelTable *labels, CodeImage *data_img, int *DC,LabelTable *table,macro_node *macro_table,int macro_count) {
     char temp[MAX_LINE_LENGTH];
     char label_name[31];
@@ -133,7 +176,7 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
     if (token == NULL) {
         return 0;
     }
-    /* אם יש label בתחילת השורה */
+    /* check if line starts with a label */
     if (token[strlen(token) - 1] == ':') {
         token[strlen(token) - 1] = '\0';
         if (!is_valid_label(token,table,macro_table,macro_count)) {
@@ -148,12 +191,12 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
             return 0;
         }
     }
-    /* חייב להיות .string */
+
     if (strcmp(token, ".string") != 0) {
         print_external_error(ERROR_38, loc);
         return 0;
     }
-    /* אם יש label, מכניסים אותו */
+    /* add label to table if found */
     if (has_label) {
         if (findLabel(labels, label_name) != -1) {
     print_external_error(ERROR_35, loc);
@@ -176,7 +219,7 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
         print_external_error(ERROR_33, loc);
         return 0;
     }
-    /* בדיקת extra text אחרי המחרוזת */
+    /* Validate extra text after string */
     {
         char *after_quote = end_quote + 1;
         while (*after_quote == ' ' || *after_quote == '\t' || *after_quote == '\n') {
@@ -187,7 +230,10 @@ int handle_string_line(char *line, int line_num,char *file_name, LabelTable *lab
             return 0;
         }
     }
+    /* Move after opeing quote */
     start_quote++;
+
+    /* Encoding string characters */
     for (i = 0; start_quote + i < end_quote; i++) {
         if (!add_code_word(data_img, (unsigned short)start_quote[i], NULL, line_num)) {
              print_internal_error(ERROR_1);
